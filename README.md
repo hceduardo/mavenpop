@@ -82,13 +82,13 @@ and users_count is the amount of distinct users that retrieved this artifact.
 
 Example:
 
-- filename: 2015-05-13_direct.csv
+- filename: 2018-05-13_direct.csv
 ```bash
 org.apache.maven.plugins:maven-install-plugin,3
 org.jvnet.staxex:stax-ex,4
 ```
 
-- filename: 2015-05-13_indirect.csv
+- filename: 2018-05-13_indirect.csv
 ```bash
 org.drools:knowledge-internal-api:5.4.0.Final,1
 org.drools:drools-core:5.4.0.Final,1
