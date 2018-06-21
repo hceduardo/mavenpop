@@ -7,7 +7,7 @@ object GavResolverJob {
 
   val RepologPath = "/home/edhdz/l/mavenpop/data_sample/repolog-part0000.txt"
   val DependenciesPath = "/home/edhdz/l/mavenpop/data/distinct_paths_inferred_gavs_with_deps.txt"
-  val GavLogPath = "/home/edhdz/l/mavenpop/data/tmp/gavlog-part0000.parquet"
+  val GavLogPath = "out/gavlog-part0000.parquet"
 
   def main(args: Array[String]) {
 
@@ -15,9 +15,7 @@ object GavResolverJob {
 
     val sparkMaster = if (args.isEmpty) "local[*]" else args(0)
 
-    val spark = SparkSession
-      .builder
-      .appName("GavResolver")
+    val spark = SparkSession.builder.appName("GavResolver")
       .config("spark.master", sparkMaster)
       .config("spark.eventLog.enabled", true)
       .getOrCreate()
