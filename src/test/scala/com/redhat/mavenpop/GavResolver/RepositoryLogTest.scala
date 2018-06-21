@@ -4,23 +4,17 @@ import org.scalatest._
 
 class RepositoryLogTest extends FlatSpec with Matchers {
 
-  "parseLogLine" should "throw RuntimeException for null argument" in {
-    assertThrows[RuntimeException]{
-      RepositoryLog.parseLogLine(null)
-    }
+  "parseLogLine" should "return None given  null argument" in {
+    RepositoryLog.parseLogLine(null) should be (None)
   }
 
-  it should "throw RuntimeException for empty string argument" in {
-    assertThrows[RuntimeException]{
-      RepositoryLog.parseLogLine("")
-    }
+  it should "return None given empty string argument" in {
+      RepositoryLog.parseLogLine("") should be (None)
   }
 
-  it should "throw RuntimeException for line in wrong format" in {
-    assertThrows[RuntimeException]{
-      RepositoryLog.parseLogLine(
-        "clientID-wrong 1421030666000 m2e junit/junit/4.8.1/junit-4.8.1.pom")
-    }
+  it should "return None given line in wrong format" in {
+    val line = "clientID-wrong 1421030666000 m2e junit/junit/4.8.1/junit-4.8.1.pom"
+    RepositoryLog.parseLogLine(line) should be (None)
   }
 
   it should "correctly parse all log line fields" in {

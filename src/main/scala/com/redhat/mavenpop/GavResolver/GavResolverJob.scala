@@ -3,6 +3,8 @@ package com.redhat.mavenpop.GavResolver
 import org.apache.spark.sql.functions.asc
 import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
 
+
+
 object GavResolverJob {
 
   val RepologPath = "/home/edhdz/l/mavenpop/data_sample/repolog-part0000.txt"
