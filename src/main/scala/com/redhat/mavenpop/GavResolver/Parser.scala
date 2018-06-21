@@ -1,11 +1,11 @@
 package com.redhat.mavenpop.GavResolver
 
 import org.apache.log4j.LogManager
-import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql.{ Dataset, SparkSession }
 
 object Parser {
 
-  @transient lazy val logger = LogManager.getLogger("mavenpop")
+  @transient lazy val logger = LogManager.getLogger(getClass.getName)
 
   def parseRepositoryLogs(spark: SparkSession, repologsPath: String): Dataset[RepositoryLog] = {
 
@@ -43,8 +43,7 @@ object Parser {
         }
       })
 
-
-    if(dependencyRecords.select("path").distinct.count != dependencyRecords.count){
+    if (dependencyRecords.select("path").distinct.count != dependencyRecords.count) {
       throw new RuntimeException("paths are not unique, verify input dependency file")
       //todo: show which are the duplicated paths
     }

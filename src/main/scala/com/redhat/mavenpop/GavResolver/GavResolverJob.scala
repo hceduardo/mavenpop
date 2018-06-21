@@ -1,9 +1,7 @@
 package com.redhat.mavenpop.GavResolver
 
 import org.apache.spark.sql.functions.asc
-import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
-
-
+import org.apache.spark.sql.{ Dataset, Row, SaveMode, SparkSession }
 
 object GavResolverJob {
 
@@ -24,7 +22,6 @@ object GavResolverJob {
       .config("spark.eventLog.enabled", true)
       .getOrCreate()
 
-
     val repositoryLogs = Parser.parseRepositoryLogs(spark, RepologPath)
     repositoryLogs.cache()
 
@@ -38,8 +35,9 @@ object GavResolverJob {
     spark.stop()
   }
 
-  private def resolveGavs(spark: SparkSession,
-                  repositoryLogs: Dataset[RepositoryLog], dependencyRecords: Dataset[DependencyRecord]): Dataset[Row] = {
+  private def resolveGavs(
+    spark: SparkSession,
+    repositoryLogs: Dataset[RepositoryLog], dependencyRecords: Dataset[DependencyRecord]): Dataset[Row] = {
 
     import spark.implicits._
 

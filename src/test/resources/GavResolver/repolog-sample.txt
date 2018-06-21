@@ -1,0 +1,3 @@
+79 1403074209000 m2e com/oracle/ojdbc14/10.2.0.4.0/ojdbc14-10.2.0.4.0.jar
+79 1403141587000 m2e log4j/log4j/1.3alpha-8/log4j-1.3alpha-8.pom
+wrongly formatted line
