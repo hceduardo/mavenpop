@@ -1,30 +1,10 @@
 package com.redhat.mavenpop.GavResolver
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.test.SharedSparkSession
 import org.scalatest._
 
 
-class ParserTest extends FlatSpec with Matchers with BeforeAndAfterAll {
-
-  @transient var spark: SparkSession = null
-
-  protected override def beforeAll(): Unit = {
-
-    spark = SparkSession.builder.appName("Unit Tests")
-      .config("spark.master", "local[*]")
-      .getOrCreate()
-
-    super.beforeAll()
-  }
-
-  protected override def afterAll(): Unit = {
-    super.afterAll()
-    if (spark != null) {
-      spark.stop()
-      spark = null
-    }
-  }
-
+class ParserTest extends FlatSpec with Matchers with SharedSparkSession {
 
   val repologPath = "/GavResolver/repolog-sample.txt"
   val dependenciesPath = "/GavResolver/dependencies-sample.txt"
