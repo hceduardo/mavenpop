@@ -1,0 +1,6 @@
+mavenpop:test:top1 mavenpop:test:dep1,mavenpop:test:dep2,mavenpop:test:dep3,mavenpop:test:dep4,mavenpop:test:dep22
+mavenpop:test:top2 mavenpop:test:dep1,mavenpop:test:dep2,mavenpop:test:dep5,mavenpop:test:dep6,mavenpop:test:dep23
+mavenpop:test:top3 mavenpop:test:dep1,mavenpop:test:dep5,mavenpop:test:dep7,mavenpop:test:dep8,mavenpop:test:dep21
+mavenpop:test:dep3 mavenpop:test:dep21,mavenpop:test:dep22
+mavenpop:test:dep5 mavenpop:test:dep23,mavenpop:test:dep21
+mavenpop:test:dep7 mavenpop:test:dep24,mavenpop:test:dep21

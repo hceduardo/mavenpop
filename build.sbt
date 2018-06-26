@@ -16,7 +16,11 @@ lazy val root = (project in file(".")).
       "org.scalatest" %% "scalatest" % "3.0.1" % Test,
       "org.apache.spark"  %  "spark-core_2.11"     % "2.3.0" % Test classifier "tests",
       "org.apache.spark"  %  "spark-catalyst_2.11"     % "2.3.0" % Test classifier "tests",
-      "org.apache.spark"  %  "spark-sql_2.11"     % "2.3.0"  % Test classifier "tests"
-
+      "org.apache.spark"  %  "spark-sql_2.11"     % "2.3.0"  % Test classifier "tests",
+      "org.neo4j" % "neo4j" % "3.4.0" % Test,
+      "org.neo4j" % "neo4j-kernel" % "3.4.0" % Test classifier "tests",
+      "org.neo4j" % "neo4j-io" % "3.4.0" % Test classifier "tests",
+      "junit" % "junit" % "4.12" % Test,
+      "org.hamcrest" % "hamcrest-all" % "1.3" % Test
     )
   )
