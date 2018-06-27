@@ -1,6 +1,6 @@
 package com.redhat.mavenpop.UsageAnalyser
 
-object CypherTestQueries {
+object HelperQueries {
 
   val LoadNodes: String =
 """LOAD CSV FROM $fileURL AS row FIELDTERMINATOR ' '

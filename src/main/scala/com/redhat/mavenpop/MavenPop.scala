@@ -210,7 +210,7 @@ object MavenPop {
         //precondition: gavList.size >= 1
 
         val gavList = row.getAs[Seq[String]]("gavs").asJava
-        var topLevelGavs = new ArrayBuffer[String]()
+        val topLevelGavs = new ArrayBuffer[String]()
 
         if (gavList.size == 1) {
           topLevelGavs.append(gavList.get(0))
