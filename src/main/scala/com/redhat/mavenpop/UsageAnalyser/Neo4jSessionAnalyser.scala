@@ -24,7 +24,7 @@ RETURN DISTINCT dependency.id AS dependencyId"""
   }
 }
 
-class Neo4jSessionAnalyser(neo4jURL: String,
+class Neo4jSessionAnalyser(boltUrl: String,
                            username: String,
                            password: String)
   extends SessionAnalyser {
@@ -62,7 +62,7 @@ class Neo4jSessionAnalyser(neo4jURL: String,
     val sessionsWithDependenciesRdd = sessions.rdd.mapPartitions(iter => {
 
       //ToDo: instead of instantiating a new driver for each partition, consider a  connection pool
-      val driver = GraphDatabase.driver(neo4jURL, AuthTokens.basic(username, password))
+      val driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
       val session = driver.session
 
       //using toList to force eager computation of the map. Otherwise the connection is closed before the map is computed

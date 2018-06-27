@@ -20,6 +20,7 @@ lazy val root = (project in file(".")).
       "org.neo4j" % "neo4j" % "3.4.0" % Test,
       "org.neo4j" % "neo4j-kernel" % "3.4.0" % Test classifier "tests",
       "org.neo4j" % "neo4j-io" % "3.4.0" % Test classifier "tests",
+      "org.neo4j" % "neo4j-bolt" % "3.4.0" % Test,
       "junit" % "junit" % "4.12" % Test,
       "org.hamcrest" % "hamcrest-all" % "1.3" % Test
     )
