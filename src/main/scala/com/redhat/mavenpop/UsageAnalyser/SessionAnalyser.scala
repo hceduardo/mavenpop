@@ -2,7 +2,7 @@ package com.redhat.mavenpop.UsageAnalyser
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-trait SessionAnalyser {
+trait SessionAnalyser extends Serializable{
   //Todo: pass structure with unknown and nodeps to filter sessions before computing
 
   /***

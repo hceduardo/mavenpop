@@ -8,7 +8,8 @@
 
 package com.redhat.mavenpop.UsageAnalyser
 
-import java.net.{InetSocketAddress, ServerSocket}
+import java.net.ServerSocket
+import java.util
 
 import org.neo4j.driver.v1._
 import org.neo4j.graphdb.GraphDatabaseService
@@ -18,10 +19,9 @@ import org.neo4j.kernel.configuration.Connector.ConnectorType._
 import org.neo4j.kernel.configuration._
 import org.neo4j.test._
 import org.scalatest._
-import java.util
 
-import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ArrayBuffer
 
 class Neo4jSessionAnalyserDriverTest extends FlatSpec with Matchers with BeforeAndAfterEach {
 
@@ -31,13 +31,15 @@ class Neo4jSessionAnalyserDriverTest extends FlatSpec with Matchers with BeforeA
   protected var driver: Driver = null
   protected var session: Session = null
 
-  private val host: String = "localhost"
-  private val port: Int = new ServerSocket(0).getLocalPort
-  private val hostAndPort: String = s"$host:$port"
-  private val boltUrl: String = s"bolt://$hostAndPort"
-  val driverConfig = org.neo4j.driver.v1.Config.build().withoutEncryption().toConfig
+  val port: Int = new ServerSocket(0).getLocalPort
 
   protected override def beforeEach(): Unit = {
+
+    val host: String = "localhost"
+
+    val hostAndPort: String = s"$host:$port"
+    val boltUrl: String = s"bolt://$hostAndPort"
+    val driverConfig = org.neo4j.driver.v1.Config.build().withoutEncryption().toConfig
 
     val connector = new BoltConnector("(bolt-tests)")
 

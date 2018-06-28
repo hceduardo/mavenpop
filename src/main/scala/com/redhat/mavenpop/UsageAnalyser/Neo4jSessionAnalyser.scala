@@ -1,7 +1,7 @@
 package com.redhat.mavenpop.UsageAnalyser
 import org.apache.spark.sql.types.{ArrayType, StringType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.neo4j.driver.v1.{AuthTokens, GraphDatabase}
+import org.neo4j.driver.v1.{AuthTokens, Config, GraphDatabase}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
@@ -24,11 +24,18 @@ RETURN DISTINCT dependency.id AS dependencyId"""
   }
 }
 
+@SerialVersionUID(100L)
 class Neo4jSessionAnalyser(boltUrl: String,
                            username: String,
-                           password: String)
+                           password: String,
+                           testConfig: Boolean )
   extends SessionAnalyser {
 
+  def this (boltUrl: String,
+            username: String,
+            password: String){
+    this(boltUrl,username,password, false)
+  }
 
   /***
     * Read gavs list of each session and computes which of them are dependencies of other gavs in the list
@@ -62,7 +69,13 @@ class Neo4jSessionAnalyser(boltUrl: String,
     val sessionsWithDependenciesRdd = sessions.rdd.mapPartitions(iter => {
 
       //ToDo: instead of instantiating a new driver for each partition, consider a  connection pool
-      val driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
+//      val driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
+
+      val driver = if (testConfig)
+        GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password), Config.build().withoutEncryption().toConfig)
+      else
+        GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
+
       val session = driver.session
 
       //using toList to force eager computation of the map. Otherwise the connection is closed before the map is computed

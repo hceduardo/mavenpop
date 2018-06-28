@@ -25,7 +25,7 @@ class SessionBuilderTest extends FlatSpec with Matchers with SharedSparkSession 
 
     val sortArrayUDF = udf[WrappedArray[String], WrappedArray[String]] { _.sorted}
 
-    // Create Sample Gav Logs and order session contents
+    // Create Sample Gav Logs
     val gavLogs :DataFrame = createGavLogs(maxIdle)
 
     // Generate sessions and order session contents
@@ -85,7 +85,7 @@ class SessionBuilderTest extends FlatSpec with Matchers with SharedSparkSession 
       StructField("gavs",ArrayType(StringType,true),true)
     ))
 
-    // Note: it is necessary in the first row to
+
     val sessionsData = Arrays.asList(
       Row(1, 0L, t0, t1, Array("c1:s0:g1","c1:s0:g2")),
       Row(1, 1L, t2, t3, Array("c1:s1:g1","c1:s1:g2")),
