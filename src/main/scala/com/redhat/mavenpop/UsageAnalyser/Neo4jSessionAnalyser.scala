@@ -72,9 +72,11 @@ class Neo4jSessionAnalyser(boltUrl: String,
 //      val driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
 
       val driver = if (testConfig)
-        GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password), Config.build().withoutEncryption().toConfig)
+        GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password), Config.build().
+          withoutEncryption().
+          toConfig)
       else
-        GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
+        GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password), Config.defaultConfig())
 
       val session = driver.session
 
