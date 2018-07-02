@@ -93,3 +93,23 @@ org.jvnet.staxex:stax-ex,4
 org.drools:knowledge-internal-api:5.4.0.Final,1
 org.drools:drools-core:5.4.0.Final,1
 ```
+
+## Usage
+
+### Prerrequisites
+
+#### Spark
+
+#### Neo4j
+
+Download Neo4j Server 3.4.1 community eddition from https://neo4j.com/download/other-releases/#releases
+and Follow the installation instructions
+
+Save NEO4J_HOME in an enviroment variable
+
+NEO4J_HOME=/path/to/extracted/neo4j-community-3.4.1
+
+
+
+
+
