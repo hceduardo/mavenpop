@@ -5,8 +5,8 @@ import org.apache.spark.sql.{ Dataset, Row, SaveMode, SparkSession }
 
 object GavResolverJob {
 
-  val RepologPath = "/home/edhdz/l/mavenpop/data_sample/repolog-part0000.txt"
-  val DependenciesPath = "/home/edhdz/l/mavenpop/data/distinct_paths_inferred_gavs_with_deps.txt"
+  val RepologPath = "in/repolog-part0000.txt"
+  val DependenciesPath = "in/distinct_paths_inferred_gavs_with_deps.txt"
   val GavLogPath = "out/gavlog-part0000.parquet"
 
   def main(args: Array[String]) {
@@ -26,25 +26,11 @@ object GavResolverJob {
     val dependencyRecords = Parser.parseDependencyRecords(spark, DependenciesPath)
     dependencyRecords.cache()
 
-    val gavLogs = resolveGavs(spark, repositoryLogs, dependencyRecords)
+    val gavLogs = GavResolver.resolveGavs(spark, repositoryLogs, dependencyRecords)
 
     gavLogs.write.mode(SaveMode.Overwrite).parquet(GavLogPath)
 
     spark.stop()
-  }
-
-  private def resolveGavs(
-    spark: SparkSession,
-    repositoryLogs: Dataset[RepositoryLog], dependencyRecords: Dataset[DependencyRecord]): Dataset[Row] = {
-
-    import spark.implicits._
-
-    val gavLogs = repositoryLogs.as("r").join(dependencyRecords.as("d"), $"r.path" === $"d.path").
-      select("clientId", "timestamp", "agent", "gav", "dependencies").
-      orderBy(asc("clientId"), asc("timestamp"))
-
-    gavLogs
-
   }
 
 }

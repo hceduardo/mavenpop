@@ -2,7 +2,7 @@
   * ref: https://neo4j.com/docs/java-reference/current/tutorials-java-embedded/#tutorials-java-unit-testing
   */
 
-package com.redhat.mavenpop.UsageAnalyser
+package com.redhat.mavenpop.DependencyComputer
 
 import java.util
 

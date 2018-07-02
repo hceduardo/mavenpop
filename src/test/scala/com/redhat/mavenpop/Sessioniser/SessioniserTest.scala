@@ -1,17 +1,17 @@
-package com.redhat.mavenpop.UsageAnalyser
+package com.redhat.mavenpop.Sessioniser
 
-import org.apache.spark.sql.{DataFrame, Row}
-import org.apache.spark.sql.test.SharedSparkSession
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.functions.udf
 import java.util.Arrays
 
+import org.apache.spark.sql.functions.udf
+import org.apache.spark.sql.test.SharedSparkSession
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, Row}
 import org.scalatest._
 
 import scala.collection.mutable.WrappedArray
 
 
-class SessionBuilderTest extends FlatSpec with Matchers with SharedSparkSession {
+class SessioniserTest extends FlatSpec with Matchers with SharedSparkSession {
 
   private val maxIdle = 1 * 60 * 1000 // Session threshold: one minute in millis
   private val t0 = 1529598557000L // Thu 21 Jun 17:29:17 BST 2018 in epoch milliseconds
@@ -29,7 +29,7 @@ class SessionBuilderTest extends FlatSpec with Matchers with SharedSparkSession 
     val gavLogs :DataFrame = createGavLogs(maxIdle)
 
     // Generate sessions and order session contents
-    val actualSessions :DataFrame = SessionBuilder.createSessions(spark, gavLogs, maxIdle )
+    val actualSessions :DataFrame = Sessioniser.createSessions(spark, gavLogs, maxIdle )
     val orderedActualSessions = actualSessions.withColumn("gavs",
       sortArrayUDF(actualSessions.col("gavs")))
 

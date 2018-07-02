@@ -6,7 +6,7 @@
   *
   */
 
-package com.redhat.mavenpop.UsageAnalyser
+package com.redhat.mavenpop.DependencyComputer
 
 import java.net.{InetSocketAddress, ServerSocket}
 
@@ -29,7 +29,7 @@ import org.apache.spark.sql.types._
 import scala.collection.mutable.{ArrayBuffer, WrappedArray}
 import scala.collection.JavaConverters._
 
-class Neo4jSessionAnalyserTest extends FlatSpec with Matchers with BeforeAndAfterEach with SharedSparkSession {
+class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndAfterEach with SharedSparkSession {
 
 
   @inline private final val startTime = 1529598557000L // Thu 21 Jun 17:29:17 BST 2018 in epoch milliseconds
@@ -124,7 +124,7 @@ class Neo4jSessionAnalyserTest extends FlatSpec with Matchers with BeforeAndAfte
     val inputSession = createSession(inputStr)
     val expectedDf = createSessionWithDeps(inputStr, expectedStr)
 
-    val sessionAnalyser = new Neo4jSessionAnalyser(boltUrl, "any", "any", true)
+    val sessionAnalyser = new Neo4JDependencyComputer(boltUrl, "any", "any", true)
     val actualDf = sessionAnalyser.computeDependencies(spark, inputSession)
 
     areDataFramesEqual(actualDf, expectedDf) should be(true)

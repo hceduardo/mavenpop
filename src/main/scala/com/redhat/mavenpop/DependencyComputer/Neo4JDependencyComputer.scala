@@ -1,4 +1,4 @@
-package com.redhat.mavenpop.UsageAnalyser
+package com.redhat.mavenpop.DependencyComputer
 import org.apache.spark.sql.types.{ArrayType, StringType, StructField, StructType}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.neo4j.driver.v1.{AuthTokens, Config, GraphDatabase}
@@ -6,7 +6,7 @@ import org.neo4j.driver.v1.{AuthTokens, Config, GraphDatabase}
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
 
-object Neo4jSessionAnalyser{
+object Neo4JDependencyComputer{
   object CypherQueries {
 
     /***
@@ -25,11 +25,11 @@ RETURN DISTINCT dependency.id AS dependencyId"""
 }
 
 @SerialVersionUID(100L)
-class Neo4jSessionAnalyser(boltUrl: String,
-                           username: String,
-                           password: String,
-                           testConfig: Boolean )
-  extends SessionAnalyser {
+class Neo4JDependencyComputer(boltUrl: String,
+                              username: String,
+                              password: String,
+                              testConfig: Boolean )
+  extends DependencyComputer {
 
   def this (boltUrl: String,
             username: String,

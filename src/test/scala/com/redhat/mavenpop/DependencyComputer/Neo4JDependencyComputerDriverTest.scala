@@ -6,7 +6,7 @@
   *
   */
 
-package com.redhat.mavenpop.UsageAnalyser
+package com.redhat.mavenpop.DependencyComputer
 
 import java.net.ServerSocket
 import java.util
@@ -23,7 +23,7 @@ import org.scalatest._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 
-class Neo4jSessionAnalyserDriverTest extends FlatSpec with Matchers with BeforeAndAfterEach {
+class Neo4JDependencyComputerDriverTest extends FlatSpec with Matchers with BeforeAndAfterEach {
 
   protected val DependenciesPath: String = "/UsageAnalyser/dependencies.txt"
 

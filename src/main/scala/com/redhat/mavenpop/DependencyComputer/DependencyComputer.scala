@@ -1,8 +1,8 @@
-package com.redhat.mavenpop.UsageAnalyser
+package com.redhat.mavenpop.DependencyComputer
 
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-trait SessionAnalyser extends Serializable{
+trait DependencyComputer extends Serializable{
   //Todo: pass structure with unknown and nodeps to filter sessions before computing
 
   /***

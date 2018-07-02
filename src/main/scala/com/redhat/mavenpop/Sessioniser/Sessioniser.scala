@@ -1,10 +1,10 @@
-package com.redhat.mavenpop.UsageAnalyser
+package com.redhat.mavenpop.Sessioniser
 
-import org.apache.spark.sql.{ DataFrame, SparkSession }
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
-object SessionBuilder {
+object Sessioniser {
 
   def createSessions(spark: SparkSession, gavLogs: DataFrame, maxIdleMilliseconds: Long): DataFrame = {
     import spark.implicits._

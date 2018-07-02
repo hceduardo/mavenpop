@@ -1,4 +1,4 @@
-package com.redhat.mavenpop.UsageAnalyser
+package com.redhat.mavenpop.DependencyComputer
 
 object HelperQueries {
 
