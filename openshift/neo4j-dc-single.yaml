@@ -1,0 +1,78 @@
+kind: Template
+apiVersion: v1
+labels:
+  application: mavenpop
+metadata:
+  annotations:
+    description: Create persistent volume claim and deployment configuration for neo4j
+  name: mavenpop-neo4j-dc-single
+
+objects:
+
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    annotations:
+    name: ${PVC_NAME}
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 5Gi
+    volumeName: ${PV_NAME}
+
+- kind: Deployment
+  apiVersion: apps/v1beta1
+  metadata:
+    name: "neo4j-single"
+    labels:
+      app: neo4j
+      component: single
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: neo4j
+          component: single
+      spec:
+        containers:
+        - name: neo4j
+          image: "neo4j:3.4"
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: NEO4J_dbms_mode
+              value: SINGLE
+            - name: NEO4J_dbms_security_auth__enabled
+              value: "false"
+            - name: NEO4J_ACCEPT_LICENSE_AGREEMENT
+              value: "yes"
+          command:
+            - "/bin/bash"
+            - "-ecx"
+            - |
+              exec /docker-entrypoint.sh "neo4j"
+          ports:
+          - containerPort: 7474
+            name: browser
+          - containerPort: 7687
+            name: bolt
+          - containerPort: 6000
+            name: tx
+          securityContext:
+            privileged: false
+          volumeMounts:
+            - mountPath: /data
+              name: volume-neo
+        volumes:
+          - name: volume-neo
+            persistentVolumeClaim:
+              claimName: ${PVC_NAME}
+parameters:
+  - name: PV_NAME
+    description: name of the persistent volume to be used by neo4j
+    required: true
+  - name: PVC_NAME
+    required: true
+    value: neo4j-storage
