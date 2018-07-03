@@ -1,11 +1,11 @@
 package com.redhat.mavenpop.DependencyComputer
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{ DataFrame, SparkSession }
 
-trait DependencyComputer extends Serializable{
+trait DependencyComputer extends Serializable {
   //Todo: pass structure with unknown and nodeps to filter sessions before computing
 
-  /***
+/***
     * Read gavs list of each session and computes which of them are dependencies of other gavs in the list
     * Adds the dependencies list as a new "dependencies" column and returns that new dataframe
     *

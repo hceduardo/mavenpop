@@ -10,23 +10,21 @@ import com.univocity.parsers.common.ResultIterator
 import org.scalatest._
 
 import scala.collection.JavaConverters._
-import org.neo4j.graphdb.{GraphDatabaseService, ResourceIterator, Result, Transaction}
+import org.neo4j.graphdb.{ GraphDatabaseService, ResourceIterator, Result, Transaction }
 import org.neo4j.test.TestGraphDatabaseFactory
 import org.neo4j.test.rule.TestDirectory
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 
-
 class Neo4jCypherQueriesTest extends FlatSpec with Matchers with BeforeAndAfterEach {
 
-  protected val DependenciesPath: String = "/UsageAnalyser/dependencies.txt"
+  protected val DependenciesPath: String = "/DependencyComputer/dependencies.txt"
 
   protected var graphDb: GraphDatabaseService = null
 
   protected override def beforeEach(): Unit = {
-    graphDb = new TestGraphDatabaseFactory().newImpermanentDatabase(
-      //TestDirectory.testDirectory().directory()
+    graphDb = new TestGraphDatabaseFactory().newImpermanentDatabase( //TestDirectory.testDirectory().directory()
     )
     loadTestGraph
   }
@@ -44,28 +42,28 @@ class Neo4jCypherQueriesTest extends FlatSpec with Matchers with BeforeAndAfterE
     var nodeCount: Long = 0L
     var relCount: Long = 0L
 
-    try{
+    try {
       tx = graphDb.beginTx()
       var result: Result = null
 
       result = graphDb.execute(HelperQueries.CountNodes)
 
-      result.hasNext should be (true)
+      result.hasNext should be(true)
       nodeCount = result.next().get("count").asInstanceOf[Long]
 
       result.close() // ignore additional results from previous query
       result = graphDb.execute(HelperQueries.CountRelationships)
 
-      result.hasNext should be (true)
+      result.hasNext should be(true)
       relCount = result.next().get("count").asInstanceOf[Long]
 
       tx.success()
-    }finally {
-      if(tx != null) tx.close()
+    } finally {
+      if (tx != null) tx.close()
     }
 
-    nodeCount should be (15L)
-    relCount should be (21L)
+    nodeCount should be(15L)
+    relCount should be(21L)
 
   }
 
@@ -161,9 +159,9 @@ class Neo4jCypherQueriesTest extends FlatSpec with Matchers with BeforeAndAfterE
       if (tx != null) tx.close()
     }
 
-    if(expectedStr == ""){
+    if (expectedStr == "") {
       dependencies shouldBe empty
-    }else{
+    } else {
       val expectedGavs = expectedStr.split(",")
       expectedGavs.sorted should contain theSameElementsAs dependencies.sorted
     }

@@ -98,6 +98,12 @@ org.drools:drools-core:5.4.0.Final,1
 
 ### Prerrequisites
 
+SBT 1.1.5
+JRE 1.8
+Scala 2.11.8 in /opt/scala
+Spark 2.3.0
+Neo4j Server Community Edition 3.4.1
+
 #### Spark
 
 #### Neo4j

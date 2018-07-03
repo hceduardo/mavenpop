@@ -1,6 +1,6 @@
 package com.redhat.mavenpop.Sessioniser
 
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.{ SaveMode, SparkSession }
 
 object SessioniserJob {
 

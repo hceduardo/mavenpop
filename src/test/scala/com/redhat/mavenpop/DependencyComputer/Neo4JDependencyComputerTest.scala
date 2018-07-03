@@ -8,7 +8,7 @@
 
 package com.redhat.mavenpop.DependencyComputer
 
-import java.net.{InetSocketAddress, ServerSocket}
+import java.net.{ InetSocketAddress, ServerSocket }
 
 import org.neo4j.driver.v1._
 import org.neo4j.graphdb.GraphDatabaseService
@@ -21,26 +21,34 @@ import org.scalatest._
 import java.util
 import java.util.Arrays
 
+import com.redhat.mavenpop.test.TestHelpers
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.test.SharedSparkSession
-import org.apache.spark.sql.{DataFrame, Row}
+import org.apache.spark.sql.{ DataFrame, Row }
 import org.apache.spark.sql.types._
 
-import scala.collection.mutable.{ArrayBuffer, WrappedArray}
+import scala.collection.mutable.{ ArrayBuffer, WrappedArray }
 import scala.collection.JavaConverters._
 
 class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndAfterEach with SharedSparkSession {
 
-
   @inline private final val startTime = 1529598557000L // Thu 21 Jun 17:29:17 BST 2018 in epoch milliseconds
   @inline private final val endTime = startTime + 1000 // t0 + 1 second
 
-  protected val DependenciesPath: String = "/UsageAnalyser/dependencies.txt"
+  protected val DependenciesPath: String = "/DependencyComputer/dependencies.txt"
 
   protected var graphDb: GraphDatabaseService = null
 
+  private var _port: Int = -1
+
+  private def port: Int = {
+    if (_port == -1) {
+      _port = TestHelpers.getFreePort
+    }
+    _port
+  }
+
   private val host: String = "localhost"
-  val port: Int = new ServerSocket(0).getLocalPort
   private val hostAndPort: String = s"$host:$port"
   private val boltUrl: String = s"bolt://$hostAndPort"
   private val driverConfig = org.neo4j.driver.v1.Config.build().withoutEncryption().toConfig
@@ -80,7 +88,7 @@ class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndA
     val inputStr: String = "mavenpop:test:top1,mavenpop:test:dep1,mavenpop:test:dep2,mavenpop:test:dep3,mavenpop:test:dep4,mavenpop:test:dep22,mavenpop:test:top2,mavenpop:test:dep5,mavenpop:test:dep6,mavenpop:test:dep23,mavenpop:test:top3,mavenpop:test:dep7,mavenpop:test:dep8,mavenpop:test:dep21,mavenpop:test:dep24"
     val expectedStr: String = "mavenpop:test:dep1,mavenpop:test:dep2,mavenpop:test:dep3,mavenpop:test:dep4,mavenpop:test:dep22,mavenpop:test:dep5,mavenpop:test:dep6,mavenpop:test:dep23,mavenpop:test:dep7,mavenpop:test:dep8,mavenpop:test:dep21,mavenpop:test:dep24"
 
-    validateComputeDependencies(inputStr, expectedStr)
+    assertComputeDependencies(inputStr, expectedStr)
 
   }
 
@@ -89,7 +97,7 @@ class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndA
     val inputStr: String = "mavenpop:test:top1,mavenpop:test:top2,mavenpop:test:top3"
     val expectedStr: String = ""
 
-    validateComputeDependencies(inputStr, expectedStr)
+    assertComputeDependencies(inputStr, expectedStr)
 
   }
 
@@ -98,7 +106,7 @@ class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndA
     val inputStr: String = "mavenpop:test:absent1,mavenpop:test:absent2,mavenpop:test:absent3"
     val expectedStr: String = ""
 
-    validateComputeDependencies(inputStr, expectedStr)
+    assertComputeDependencies(inputStr, expectedStr)
 
   }
 
@@ -107,7 +115,7 @@ class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndA
     val inputStr: String = "mavenpop:test:top1,mavenpop:test:absent1,mavenpop:test:absent2,mavenpop:test:absent3"
     val expectedStr: String = ""
 
-    validateComputeDependencies(inputStr, expectedStr)
+    assertComputeDependencies(inputStr, expectedStr)
 
   }
 
@@ -116,11 +124,11 @@ class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndA
     val inputStr: String = "mavenpop:test:absent1,mavenpop:test:top1,mavenpop:test:top2,mavenpop:test:top3,mavenpop:test:dep24"
     val expectedStr: String = "mavenpop:test:dep24"
 
-    validateComputeDependencies(inputStr, expectedStr)
+    assertComputeDependencies(inputStr, expectedStr)
 
   }
-  
-  private def validateComputeDependencies(inputStr: String, expectedStr: String) = {
+
+  private def assertComputeDependencies(inputStr: String, expectedStr: String) = {
     val inputSession = createSession(inputStr)
     val expectedDf = createSessionWithDeps(inputStr, expectedStr)
 
@@ -130,29 +138,30 @@ class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndA
     areDataFramesEqual(actualDf, expectedDf) should be(true)
   }
 
-  /** *
-    * expects both dataframes to be
-    * StructType(List(
-      *StructField("clientId",IntegerType,false),
-      *StructField("sessionId",LongType,true),
-      *StructField("startTime",LongType,true),
-      *StructField("endTime",LongType,true),
-      *StructField("gavs",ArrayType(StringType,true),true),
-      *StructField("dependencies",ArrayType(StringType,true),true)
-    */
+  /**
+   * *
+   * expects both dataframes to be
+   * StructType(List(
+   * StructField("clientId",IntegerType,false),
+   * StructField("sessionId",LongType,true),
+   * StructField("startTime",LongType,true),
+   * StructField("endTime",LongType,true),
+   * StructField("gavs",ArrayType(StringType,true),true),
+   * StructField("dependencies",ArrayType(StringType,true),true)
+   */
   private def areDataFramesEqual(df1: DataFrame, df2: DataFrame): Boolean = {
 
     // ToDo: for multiline dataframes: sort both dataframes by all columns first. Consider using a Spark Testing framework
 
     // Need to order the session array ("gavs" column contents) for comparision to succeed
-    val sortArrayUDF = udf[WrappedArray[String], WrappedArray[String]] { _.sorted}
+    val sortArrayUDF = udf[WrappedArray[String], WrappedArray[String]] { _.sorted }
 
     // Generate sessions and order session contents
-    val sortedDf1 = df1.withColumn("gavs",sortArrayUDF(df1.col("gavs"))).
-      withColumn("dependencies",sortArrayUDF(df1.col("dependencies")))
+    val sortedDf1 = df1.withColumn("gavs", sortArrayUDF(df1.col("gavs"))).
+      withColumn("dependencies", sortArrayUDF(df1.col("dependencies")))
 
-    val sortedDf2 = df2.withColumn("gavs",sortArrayUDF(df2.col("gavs"))).
-      withColumn("dependencies",sortArrayUDF(df2.col("dependencies")))
+    val sortedDf2 = df2.withColumn("gavs", sortArrayUDF(df2.col("gavs"))).
+      withColumn("dependencies", sortArrayUDF(df2.col("dependencies")))
     //orderedActualSessions.collect().sameElements(orderedExpectedSessions.collect) should be (true)
 
     val a1 = sortedDf1.collect
@@ -160,47 +169,29 @@ class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndA
 
     val sameElements = a1.sameElements(a2)
 
-    if(!sameElements){
-      print(generateMismatchMessage(a1, a2))
+    if (!sameElements) {
+      print(TestHelpers.generateMismatchMessage(a1, a2))
     }
 
     return sameElements
 
   }
 
-  private def generateMismatchMessage[T](a1: Array[T], a2: Array[T]): String = {
-    if(a1.size != a2.size){
-      s"different sizes: ${a1.size} != ${a2.size}"
-    }
-    else {
-      "different elements: \n" + a1.zip(a2).flatMap {
-        case (r1, r2) =>
-          if (!r1.equals(r2)) {
-            Some(s"$r1 | $r2")
-          } else {
-            None
-          }
-      }.mkString("\n")
-    }
-  }
-
-  private def createSessionWithDeps(sessionStr: String, dependenciesStr: String) :DataFrame ={
+  private def createSessionWithDeps(sessionStr: String, dependenciesStr: String): DataFrame = {
 
     val sessionsWithDepSchema = StructType(List(
-      StructField("clientId",IntegerType,false),
-      StructField("sessionId",LongType,true),
-      StructField("startTime",LongType,true),
-      StructField("endTime",LongType,true),
-      StructField("gavs",ArrayType(StringType,true),true),
-      StructField("dependencies",ArrayType(StringType,true),true)
-    ))
+      StructField("clientId", IntegerType, false),
+      StructField("sessionId", LongType, true),
+      StructField("startTime", LongType, true),
+      StructField("endTime", LongType, true),
+      StructField("gavs", ArrayType(StringType, true), true),
+      StructField("dependencies", ArrayType(StringType, true), true)))
 
     val dependenciesArr = if (dependenciesStr == "") new Array[String](0)
-                          else dependenciesStr.split(",")
+    else dependenciesStr.split(",")
 
     val sessionsWithDepData = Arrays.asList(
-      Row(1, 0L, startTime, endTime, sessionStr.split(","), dependenciesArr)
-    )
+      Row(1, 0L, startTime, endTime, sessionStr.split(","), dependenciesArr))
 
     val sessionsWithDep = spark.createDataFrame(sessionsWithDepData, sessionsWithDepSchema)
 
@@ -211,16 +202,14 @@ class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndA
   private def createSession(inputStr: String): DataFrame = {
 
     val sessionsSchema = StructType(List(
-      StructField("clientId",IntegerType,false),
-      StructField("sessionId",LongType,true),
-      StructField("startTime",LongType,true),
-      StructField("endTime",LongType,true),
-      StructField("gavs",ArrayType(StringType,true),true)
-    ))
+      StructField("clientId", IntegerType, false),
+      StructField("sessionId", LongType, true),
+      StructField("startTime", LongType, true),
+      StructField("endTime", LongType, true),
+      StructField("gavs", ArrayType(StringType, true), true)))
 
     val sessionsData = Arrays.asList(
-      Row(1, 0L, startTime, endTime, inputStr.split(","))
-    )
+      Row(1, 0L, startTime, endTime, inputStr.split(",")))
 
     val sessions = spark.createDataFrame(sessionsData, sessionsSchema)
 

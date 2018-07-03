@@ -16,7 +16,7 @@ object DependencyRecord {
 
       case PATTERN(_, path, gav, dependencies) =>
         Some(DependencyRecord(
-          path, gav, dependencies.split(",")))
+          path, gav, dependencies.split(",").distinct))
 
       case _ => None
     }

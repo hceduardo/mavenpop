@@ -24,8 +24,8 @@ object DependencyComputerJob {
       .getOrCreate()
 
     val sessions = spark.read.parquet(SessionsPath)
-    val sessionsAnalyser: DependencyComputer = new Neo4JDependencyComputer(Neo4jboltUrl,Neo4jUsername,Neo4jPassword)
-    val  sessionsWithDependencies = sessionsAnalyser.computeDependencies(spark, sessions)
+    val sessionsAnalyser: DependencyComputer = new Neo4JDependencyComputer(Neo4jboltUrl, Neo4jUsername, Neo4jPassword)
+    val sessionsWithDependencies = sessionsAnalyser.computeDependencies(spark, sessions)
 
     spark.stop()
   }

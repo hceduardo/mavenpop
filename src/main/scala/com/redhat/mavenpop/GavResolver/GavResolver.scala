@@ -1,12 +1,12 @@
 package com.redhat.mavenpop.GavResolver
 
-import org.apache.spark.sql.{Dataset, Row, SparkSession}
+import org.apache.spark.sql.{ Dataset, Row, SparkSession }
 import org.apache.spark.sql.functions.asc
 
 object GavResolver {
   def resolveGavs(
-                   spark: SparkSession,
-                   repositoryLogs: Dataset[RepositoryLog], dependencyRecords: Dataset[DependencyRecord]): Dataset[Row] = {
+    spark: SparkSession,
+    repositoryLogs: Dataset[RepositoryLog], dependencyRecords: Dataset[DependencyRecord]): Dataset[Row] = {
 
     import spark.implicits._
 

@@ -8,7 +8,7 @@ lazy val root = (project in file(".")).
     )),
     name := "mavenpopcore",
     version := "0.1",
-    mainClass in assembly := Some("com.redhat.mavenpop.MavenPop"),
+    mainClass in assembly := Some("com.redhat.mavenpop.DependencyParser.DependencyParserApp"),
     libraryDependencies ++= Seq(
       "org.apache.spark"  %  "spark-sql_2.11"     % "2.3.0" /*% "provided"*/,
       "org.neo4j.driver" %  "neo4j-java-driver"  % "1.5.2",
@@ -23,5 +23,6 @@ lazy val root = (project in file(".")).
       "org.neo4j" % "neo4j-bolt" % "3.4.0" % Test,
       "junit" % "junit" % "4.12" % Test,
       "org.hamcrest" % "hamcrest-all" % "1.3" % Test
-    )
+    ),
+    parallelExecution in Test := false
   )

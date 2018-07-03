@@ -1,20 +1,20 @@
 package com.redhat.mavenpop.DependencyComputer
-import org.apache.spark.sql.types.{ArrayType, StringType, StructField, StructType}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.neo4j.driver.v1.{AuthTokens, Config, GraphDatabase}
+import org.apache.spark.sql.types.{ ArrayType, StringType, StructField, StructType }
+import org.apache.spark.sql.{ DataFrame, Row, SparkSession }
+import org.neo4j.driver.v1.{ AuthTokens, Config, GraphDatabase }
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
 
-object Neo4JDependencyComputer{
+object Neo4JDependencyComputer {
   object CypherQueries {
 
-    /***
+/***
       * Returns which of the gavs in the list are dependencies of other gavs in the list
       * params: gavList
       * return columns: dependencyId
       */
-    val GetDependenciesFromList :String =
+    val GetDependenciesFromList: String =
       """WITH $gavList as gavIds
 MATCH p = (topLevel:GAV)-[:DEPENDS_ON*1..]->(dependency:GAV)
 WHERE topLevel.id in gavIds AND dependency.id in gavIds AND
@@ -25,19 +25,21 @@ RETURN DISTINCT dependency.id AS dependencyId"""
 }
 
 @SerialVersionUID(100L)
-class Neo4JDependencyComputer(boltUrl: String,
-                              username: String,
-                              password: String,
-                              testConfig: Boolean )
+class Neo4JDependencyComputer(
+  boltUrl: String,
+  username: String,
+  password: String,
+  testConfig: Boolean)
   extends DependencyComputer {
 
-  def this (boltUrl: String,
-            username: String,
-            password: String){
-    this(boltUrl,username,password, false)
+  def this(
+    boltUrl: String,
+    username: String,
+    password: String) {
+    this(boltUrl, username, password, false)
   }
 
-  /***
+/***
     * Read gavs list of each session and computes which of them are dependencies of other gavs in the list
     * Adds the dependencies list as a new "dependencies" column and returns that new dataframe
     *
@@ -69,7 +71,7 @@ class Neo4JDependencyComputer(boltUrl: String,
     val sessionsWithDependenciesRdd = sessions.rdd.mapPartitions(iter => {
 
       //ToDo: instead of instantiating a new driver for each partition, consider a  connection pool
-//      val driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
+      //      val driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
 
       val driver = if (testConfig)
         GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password), Config.build().
@@ -112,7 +114,6 @@ class Neo4JDependencyComputer(boltUrl: String,
     val newSchema = StructType(sessions.schema.fields :+ StructField("dependencies", ArrayType(StringType, true), true))
     val sessionsWithDependencies = spark.createDataFrame(sessionsWithDependenciesRdd, newSchema)
     //    sessionsWithDependencies.cache
-
 
     sessionsWithDependencies
     // Testing

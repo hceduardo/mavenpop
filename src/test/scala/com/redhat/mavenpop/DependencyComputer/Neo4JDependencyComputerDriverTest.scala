@@ -11,6 +11,7 @@ package com.redhat.mavenpop.DependencyComputer
 import java.net.ServerSocket
 import java.util
 
+import com.redhat.mavenpop.test.TestHelpers
 import org.neo4j.driver.v1._
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.graphdb.factory.GraphDatabaseSettings
@@ -25,22 +26,26 @@ import scala.collection.mutable.ArrayBuffer
 
 class Neo4JDependencyComputerDriverTest extends FlatSpec with Matchers with BeforeAndAfterEach {
 
-  protected val DependenciesPath: String = "/UsageAnalyser/dependencies.txt"
+  protected val DependenciesPath: String = "/DependencyComputer/dependencies.txt"
 
   protected var graphDb: GraphDatabaseService = null
   protected var driver: Driver = null
   protected var session: Session = null
+  private var _port: Int = -1
 
-  val port: Int = new ServerSocket(0).getLocalPort
+  private def port: Int = {
+    if (_port == -1) {
+      _port = TestHelpers.getFreePort
+    }
+    _port
+  }
 
   protected override def beforeEach(): Unit = {
 
     val host: String = "localhost"
-
     val hostAndPort: String = s"$host:$port"
     val boltUrl: String = s"bolt://$hostAndPort"
     val driverConfig = org.neo4j.driver.v1.Config.build().withoutEncryption().toConfig
-
     val connector = new BoltConnector("(bolt-tests)")
 
     graphDb = new TestGraphDatabaseFactory().newImpermanentDatabaseBuilder()
@@ -73,16 +78,16 @@ class Neo4JDependencyComputerDriverTest extends FlatSpec with Matchers with Befo
   it should "retrieve graph statistics" in {
 
     var result: StatementResult = session.run(HelperQueries.CountNodes)
-    result.hasNext should be (true)
+    result.hasNext should be(true)
     val nodeCount = result.next.get("count").asLong
     result.consume()
 
     result = session.run(HelperQueries.CountRelationships)
-    result.hasNext should be (true)
+    result.hasNext should be(true)
     val relCount = result.next.get("count").asLong
 
-    nodeCount should be (15L)
-    relCount should be (21L)
+    nodeCount should be(15L)
+    relCount should be(21L)
 
   }
 
@@ -170,9 +175,9 @@ class Neo4JDependencyComputerDriverTest extends FlatSpec with Matchers with Befo
       dependencies.append(queryResult.next().get("dependencyId").asString())
     }
 
-    if(expectedStr == ""){
+    if (expectedStr == "") {
       dependencies shouldBe empty
-    }else{
+    } else {
       val expectedGavs = expectedStr.split(",")
       expectedGavs.sorted should contain theSameElementsAs dependencies.sorted
     }
