@@ -33,7 +33,7 @@ class NeoDataParserTest extends FlatSpec with Matchers with BeforeAndAfterEach {
     source.close()
   }
 
-  "parseDependencies" should "write files" in {
+  "parseDependencies" should "write nodes and relationships files" in {
 
     val sourceStr =
       """1 p mavenpop:test:top1 mavenpop:test:dep1,mavenpop:test:dep2,mavenpop:test:dep3
@@ -67,10 +67,11 @@ mavenpop:test:top2,mavenpop:test:dep3"""
       sourceStr.stripMargin)
 
     val expectedGavArr = NeoDataParser.HEADER_NODE_GAV +:
-      expectedNodeStr.stripMargin.split("\n").map(_ + "," + NeoDataParser.LABEL_NODE_GAV)
+      expectedNodeStr.stripMargin.split("\n").map(_ + NeoDataParser.DELIMITER + NeoDataParser.LABEL_NODE_GAV)
 
     val expectedDepArr = NeoDataParser.HEADER_REL_DEP +:
-      expectedRelStr.stripMargin.split("\n").map(_ + "," + NeoDataParser.LABEL_REL_DEP)
+      expectedRelStr.stripMargin.replaceAll(",", NeoDataParser.DELIMITER).
+      split("\n").map(_ + NeoDataParser.DELIMITER + NeoDataParser.LABEL_REL_DEP)
 
     val parser = new NeoDataParser()
     parser.parseDependencies(source, outGav, outDep)

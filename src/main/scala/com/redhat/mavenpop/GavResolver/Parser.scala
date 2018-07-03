@@ -17,7 +17,7 @@ object Parser {
         RepositoryLog.parseLogLine(line) match {
           case Some(rl) => Some(rl)
           case None => {
-            logger.error(s"""Could not parse line from repository logs: $line""")
+            logger.warn(s"""Could not parse line from repository logs: $line""")
             None
           }
         }

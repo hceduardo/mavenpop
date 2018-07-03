@@ -115,7 +115,29 @@ Save NEO4J_HOME in an enviroment variable
 
 NEO4J_HOME=/path/to/extracted/neo4j-community-3.4.1
 
+### Overview of Entry Points
 
+\*App are console applications and \*Job are Spark Batch Jobs
+
+1. DependencyParserApp: creates input files to populate dependency data structure
+
+2. GavResolverJob: Takes repository logs and resolve the paths in them into maven coordinates
+
+3. SessioniserJob: Groups consecutive dowloads into sessions
+
+4. DependencyComputerJob: Add transitive dependencies list to sessions
+
+### Load Dependency Structure
+
+Input: Dependencies file
+
+Run DependencyParserApp dependencies_in_file.txt neo-nodes.txt neo-rels.txt
+
+scripts/import_and_start_neo.bash neo-nodes.txt neo-rels.txt db-name.db
+
+note: db-name.db is deleted if previously exists and ovewritten with new database
+
+localhost:7474  login and :schema  to verify indexes
 
 
 

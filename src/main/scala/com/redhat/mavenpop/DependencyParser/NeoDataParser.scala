@@ -67,7 +67,7 @@ class NeoDataParser {
         }
 
         case None => {
-          logger.error(s"could not parse line ${lineNumber}: ${line}")
+          logger.warn(s"could not parse line ${lineNumber}: ${line}")
         }
       }
     }
