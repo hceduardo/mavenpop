@@ -10,7 +10,7 @@ lazy val root = (project in file(".")).
     version := "0.1",
     mainClass in assembly := Some("com.redhat.mavenpop.DependencyParser.DependencyParserApp"),
     libraryDependencies ++= Seq(
-      "org.apache.spark"  %  "spark-sql_2.11"     % "2.3.0" /*% "provided"*/,
+      "org.apache.spark"  %  "spark-sql_2.11"     % "2.3.0" % "provided",
       "org.neo4j.driver" %  "neo4j-java-driver"  % "1.5.2",
       "com.typesafe" % "config"               % "1.3.3",
 

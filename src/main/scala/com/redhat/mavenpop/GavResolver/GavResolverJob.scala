@@ -3,7 +3,6 @@ package com.redhat.mavenpop.GavResolver
 
 import com.redhat.mavenpop.MavenPopConfig
 import org.apache.spark.sql.{SaveMode, SparkSession}
-import com.typesafe.config.{Config, ConfigFactory}
 
 
 object GavResolverJob {

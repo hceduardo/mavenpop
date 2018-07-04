@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="GavResolverJob" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="com.redhat.mavenpop.GavResolver.GavResolverJob" />
+    <module name="mainRunner" />
+    <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.redhat.mavenpop.GavResolver.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <method />
+  </configuration>
+</component>
