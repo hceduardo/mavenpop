@@ -2,6 +2,7 @@
   <configuration default="false" name="GavResolverJob" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="com.redhat.mavenpop.GavResolver.GavResolverJob" />
     <module name="mainRunner" />
+    <option name="VM_PARAMETERS" value="-Dconfig.file=conf/one-repolog.conf" />
     <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
     <extension name="coverage">
       <pattern>

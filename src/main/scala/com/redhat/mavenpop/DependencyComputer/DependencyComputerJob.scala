@@ -1,13 +1,15 @@
 package com.redhat.mavenpop.DependencyComputer
 
 import com.redhat.mavenpop.MavenPopConfig
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.{ SaveMode, SparkSession }
 
 object DependencyComputerJob {
 
   def main(args: Array[String]) {
 
-    val conf: MavenPopConfig = new MavenPopConfig("mavenpop.conf")
+    // Load resources/reference.conf by default
+    // Allows override with -Dconfig.file=path/to/config-file
+    val conf: MavenPopConfig = new MavenPopConfig()
 
     val sparkMaster = if (args.isEmpty) "local[*]" else args(0)
 
