@@ -28,7 +28,7 @@ object Experiment {
     }
 
     print(dependencies)
-    
+
     session.close()
     driver.close()
   }

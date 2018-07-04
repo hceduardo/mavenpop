@@ -37,7 +37,7 @@ object Parser {
         DependencyRecord.parseLogLine(line) match {
           case Some(dr) => Some(dr)
           case None => {
-            logger.error(s"""Could not parse line from dependency records: $line""")
+            logger.warn(s"""Could not parse line from dependency records: $line""")
             None
           }
         }
