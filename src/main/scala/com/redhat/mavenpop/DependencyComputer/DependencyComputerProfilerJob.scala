@@ -1,9 +1,9 @@
 package com.redhat.mavenpop.DependencyComputer
 
 import com.redhat.mavenpop.MavenPopConfig
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
-object DependencyComputerJob {
+object DependencyComputerProfilerJob {
 
   def main(args: Array[String]) {
 
@@ -18,16 +18,35 @@ object DependencyComputerJob {
       .config("spark.eventLog.enabled", true)
       .getOrCreate()
 
-    val sessions = spark.read.parquet(conf.sessionsPath)
+    import spark.implicits._
 
-    val dependencyComputer: DependencyComputer = new Neo4JDependencyComputer(
-      conf.neoBoltUrl, conf.neoUsername, conf.neoPassword)
+    val sessionsWithSize = spark.read.parquet(conf.sessionsPath).withColumn("size", size($"gavs"))
 
-    val sessionsWithDependencies = dependencyComputer.computeDependencies(spark, sessions)
+    val sampleSessions = takeSampleSessions(sessionsWithSize, 10, 40)
 
-    sessionsWithDependencies.write.mode(SaveMode.Overwrite).parquet(conf.sessionsWithDepsPath)
+    val dependencyProfiler: DependencyComputer =
+      new Neo4JDependencyComputerProfiler(conf.neoBoltUrl, conf.neoUsername, conf.neoPassword)
+
+    val sessionsWithComputingTime = dependencyProfiler.computeDependencies(spark, sessionsWithSize)
+
+    sessionsWithComputingTime.write.mode(SaveMode.Overwrite).parquet(conf.sessionsWithTimePath)
 
     spark.stop()
+  }
+
+  def takeSampleSessions(sessionsWithSize: DataFrame, samplesPerSize: Int, maxSessionSize: Int): DataFrame ={
+
+    assert(maxSessionSize > 1)
+
+    var sessionSize = 1
+    var samples = sessionsWithSize.filter(s"size == $sessionSize").limit(samplesPerSize)
+
+    while (sessionSize <= maxSessionSize){
+      sessionSize = sessionSize + 1
+      val s = sessionsWithSize.filter(s"size == $sessionSize").limit(samplesPerSize)
+      samples = samples.union(s)
+    }
+
   }
 
 }

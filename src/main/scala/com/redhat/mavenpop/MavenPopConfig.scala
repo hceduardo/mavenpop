@@ -20,6 +20,7 @@ class MavenPopConfig() {
   val gavLogsPath = config.getString("mavenpop.path.gavlogs")
   val sessionsPath = config.getString("mavenpop.path.sessions")
   val sessionsWithDepsPath = config.getString("mavenpop.path.sessionsWithDeps")
+  val sessionsWithTimePath = config.getString("mavenpop.path.sessionsWithTime")
 
   val sessionMaxIdleMillis = config.getLong("mavenpop.sessions.maxIdleMillis")
   val neoBoltUrl = config.getString("mavenpop.neo4j.boltUrl")
