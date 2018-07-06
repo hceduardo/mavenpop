@@ -1,7 +1,7 @@
 package com.redhat.mavenpop.DependencyComputer
 
 import com.redhat.mavenpop.MavenPopConfig
-import org.apache.spark.sql.{ SaveMode, SparkSession }
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
 object DependencyComputerJob {
 
