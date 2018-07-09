@@ -3,9 +3,10 @@ package com.redhat.mavenpop.DependencyParser
 import java.io.PrintWriter
 
 import com.redhat.mavenpop.GavResolver.DependencyRecord
-import org.apache.log4j.LogManager
 
 import scala.io.Source
+
+import org.apache.log4j.LogManager
 
 object NeoDataParser {
   val DELIMITER = "|"

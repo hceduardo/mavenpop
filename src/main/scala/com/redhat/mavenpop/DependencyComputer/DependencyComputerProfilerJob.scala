@@ -1,7 +1,8 @@
 package com.redhat.mavenpop.DependencyComputer
 
 import com.redhat.mavenpop.MavenPopConfig
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.sql.{ DataFrame, SaveMode, SparkSession }
+import org.apache.spark.sql.functions._
 
 object DependencyComputerProfilerJob {
 
@@ -20,32 +21,43 @@ object DependencyComputerProfilerJob {
 
     import spark.implicits._
 
-    val sessionsWithSize = spark.read.parquet(conf.sessionsPath).withColumn("size", size($"gavs"))
+    val sessions = spark.read.parquet(conf.sessionsPath)
 
-    val sampleSessions = takeSampleSessions(sessionsWithSize, 10, 40)
+    val sessionsWithSize = sessions.withColumn("size", size($"gavs"))
+    //    val sampleSessions = takeSampleSessions(sessionsWithSize, 10, 40)
+
+    val sampleSessions = takeSampleSessions(
+      sessionsWithSize,
+      conf.profilerMinSessionSize, conf.profilerMaxSessionSize, conf.profilerSamplesPerSize)
 
     val dependencyProfiler: DependencyComputer =
       new Neo4JDependencyComputerProfiler(conf.neoBoltUrl, conf.neoUsername, conf.neoPassword)
 
-    val sessionsWithComputingTime = dependencyProfiler.computeDependencies(spark, sessionsWithSize)
+    val sessionsWithComputingTime = dependencyProfiler.computeDependencies(spark, sampleSessions)
 
     sessionsWithComputingTime.write.mode(SaveMode.Overwrite).parquet(conf.sessionsWithTimePath)
 
     spark.stop()
   }
 
-  def takeSampleSessions(sessionsWithSize: DataFrame, samplesPerSize: Int, maxSessionSize: Int): DataFrame ={
+  private def takeSampleSessions(
+    sessionsWithSize: DataFrame,
+    minSessionSize: Int, maxSessionSize: Int,
+    samplesPerSize: Int): DataFrame = {
 
-    assert(maxSessionSize > 1)
+    assert(minSessionSize >= 2)
+    assert(maxSessionSize >= minSessionSize)
 
-    var sessionSize = 1
+    var sessionSize = minSessionSize
     var samples = sessionsWithSize.filter(s"size == $sessionSize").limit(samplesPerSize)
 
-    while (sessionSize <= maxSessionSize){
-      sessionSize = sessionSize + 1
+    while (sessionSize < maxSessionSize) {
+      sessionSize += 1
       val s = sessionsWithSize.filter(s"size == $sessionSize").limit(samplesPerSize)
       samples = samples.union(s)
     }
+
+    samples
 
   }
 

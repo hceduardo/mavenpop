@@ -1,14 +1,52 @@
 package com.redhat.mavenpop.DependencyComputer
 
-import org.apache.spark.sql.types.{ArrayType, StringType, StructField, StructType}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.neo4j.driver.v1.{AuthTokens, Config, GraphDatabase}
+import com.redhat.mavenpop.TransactionFailureReason
+import com.redhat.mavenpop.TransactionFailureReason.TransactionFailureReason
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{ DataFrame, Row, SparkSession }
+import org.neo4j.driver.v1.exceptions.ClientException
+import org.neo4j.driver.v1.{ AuthTokens, Config, GraphDatabase, Session }
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 
+object Neo4JDependencyComputerProfiler {
 
-@SerialVersionUID(100L)
+  case class ProfilerResult(elapsedMillis: Long, dependencies: ArrayBuffer[String])
+
+  def getDependencies(neo4jSession: Session, gavList: java.util.List[String]): Either[TransactionFailureReason, ProfilerResult] = {
+
+    //Using Either instead of Try/Success/Failure because the ClientError exception is not catched by scala.util.Try()
+
+    val parameters = Map[String, Object]("gavList" -> gavList).asJava
+
+    try {
+
+      val t1 = System.nanoTime()
+
+      val result = neo4jSession.run(CypherQueries.GetDependenciesFromList, parameters)
+      val deps = new ArrayBuffer[String]()
+
+      while (result.hasNext) {
+        deps.append(result.next().get(0).asString())
+      }
+
+      val elapsedMillis = (System.nanoTime() - t1) / 1000000
+
+      Right(ProfilerResult(elapsedMillis, deps))
+
+    } catch {
+      case e: Throwable => {
+        if (e.isInstanceOf[ClientException] && e.getMessage.contains("timeout"))
+          Left(TransactionFailureReason.TIMEOUT)
+        else
+          Left(TransactionFailureReason.OTHER)
+      }
+    }
+  }
+}
+
+//@SerialVersionUID(100L)
 class Neo4JDependencyComputerProfiler(
   boltUrl: String, username: String, password: String, testConfig: Boolean)
   extends DependencyComputer {
@@ -43,22 +81,27 @@ class Neo4JDependencyComputerProfiler(
     */
   override def computeDependencies(spark: SparkSession, sessions: DataFrame): DataFrame = {
 
+    // Copying instance fields to local variables to avoid serializing instance for executor task subimission
+    // ref: https://spark.apache.org/docs/latest/rdd-programming-guide.html#passing-functions-to-spark
+
+    val (boltUrl_, username_, password_, testConfig_) = (boltUrl, username, password, testConfig)
+
     // Use of map partitions to create one connection per partition in workers See:
     //  https://spark.apache.org/docs/latest/streaming-programming-guide.html#design-patterns-for-using-foreachrdd
 
-    val sessionsWithDependenciesRdd = sessions.rdd.mapPartitions(iter => {
+    val sessionsWithTimeRdd = sessions.rdd.mapPartitions(iter => {
 
       //ToDo: instead of instantiating a new driver for each partition, consider a  connection pool
       //      val driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
 
-      val driver = if (testConfig)
-        GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password), Config.build().
+      val driver = if (testConfig_)
+        GraphDatabase.driver(boltUrl_, AuthTokens.basic(username_, password_), Config.build().
           withoutEncryption().
           toConfig)
       else
-        GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password), Config.defaultConfig())
+        GraphDatabase.driver(boltUrl_, AuthTokens.basic(username_, password_), Config.defaultConfig())
 
-      val session = driver.session
+      val neo4jSession = driver.session
 
       //using toList to force eager computation of the map. Otherwise the connection is closed before the map is computed
       //ToDo: evaluate better ways of forcing eager computation (for ex: closing the connection inside the map if(iter.isempty))
@@ -68,40 +111,44 @@ class Neo4JDependencyComputerProfiler(
         //precondition: gavList.size >= 1
 
         val gavList = row.getAs[Seq[String]]("gavs").asJava
-        val dependencies = new ArrayBuffer[String]()
 
-        if (gavList.size > 1) {
-          val parameters = Map[String, Object]("gavList" -> gavList).asJava
-          val queryResult = session.run(CypherQueries.GetDependenciesFromList, parameters)
+        Neo4JDependencyComputerProfiler.getDependencies(neo4jSession, gavList) match {
+          case Right(result) => {
+            // add dependencies, elapsed computing in milliseconds and error = None
+            Row.fromSeq(row.toSeq ++ Array(result.dependencies, result.elapsedMillis, null))
+          }
 
-          while (queryResult.hasNext()) {
-            dependencies.append(queryResult.next().get("dependencyId").asString())
+          case Left(failureReason) => {
+            // add dependencies = None, elapsed time = None with failure reason
+            Row.fromSeq(row.toSeq ++ Array(null, null, failureReason.toString))
           }
         }
 
-        Row.fromSeq(row.toSeq :+ dependencies) // add array as "column" to rdd
-
       }).toList
 
-      session.close()
+      neo4jSession.close()
       driver.close()
 
       result.iterator
     })
 
-    val newSchema = StructType(sessions.schema.fields :+ StructField("dependencies", ArrayType(StringType, true), true))
-    val sessionsWithDependencies = spark.createDataFrame(sessionsWithDependenciesRdd, newSchema)
-    //    sessionsWithDependencies.cache
+    val newSchema = StructType(sessions.schema.fields ++ Array[StructField](
+      StructField("dependencies", ArrayType(StringType, true), true),
+      StructField("execMillis", LongType, true),
+      StructField("error", StringType, true)))
 
-    sessionsWithDependencies
+    val sessionsWithTime = spark.createDataFrame(sessionsWithTimeRdd, newSchema)
+    //    sessionsWithTime.cache
+
+    sessionsWithTime
     // Testing
     /*
-        sessionsWithDependencies.
+        sessionsWithTime.
           select($"gavs", $"topLevelGavs").
           filter( size($"gavs") =!= size($"topLevelGavs") ).
           show(10, 0, true)
 
-        sessionsWithDependencies.
+        sessionsWithTime.
           select($"gavs", $"topLevelGavs").
           filter( (size($"gavs") === size($"topLevelGavs"))).
           show(10, 0, true)
@@ -110,11 +157,12 @@ class Neo4JDependencyComputerProfiler(
         import org.apache.spark.sql.functions.udf
         val stringify = udf((vs: Seq[String]) => s"""[${vs.mkString(",")}]""")
 
-        sessionsWithDependencies.
+        sessionsWithTime.
           select($"gavs", $"topLevelGavs").
           filter( size($"gavs") =!= size($"topLevelGavs") ).
           withColumn("gavs", stringify($"gavs")).withColumn("topLevelGavs", stringify($"topLevelGavs")).
           write.csv("/home/edhdz/l/mavenpop/data/tmp/analytics_graph_results.csv")
     */
   }
+
 }

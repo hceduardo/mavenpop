@@ -1,14 +1,12 @@
 package com.redhat.mavenpop.DependencyParser
 
 import java.io.{ PrintWriter, StringWriter }
-
 import org.apache.log4j.LogManager
-
 import scala.io.Source
 
 object DependencyParserApp {
 
-  private val logger = LogManager.getLogger(getClass.getName)
+  val logger = LogManager.getLogger(getClass.getName)
 
   def main(args: Array[String]): Unit = {
 
