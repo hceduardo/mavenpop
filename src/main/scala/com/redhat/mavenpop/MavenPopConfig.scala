@@ -29,7 +29,7 @@ class MavenPopConfig() {
 
   val profilerMaxSessionSize = config.getInt("mavenpop.dependencyComputerProfiler.maxSessionSize")
   val profilerMinSessionSize = config.getInt("mavenpop.dependencyComputerProfiler.minSessionSize")
-  val profilerSamplesPerSize = config.getInt("mavenpop.dependencyComputerProfiler.minSessionSize")
+  val profilerSamplesPerSize = config.getInt("mavenpop.dependencyComputerProfiler.samplesPerSize")
 
   override def toString(): String = {
     val s: StringBuilder = new StringBuilder()

@@ -30,6 +30,8 @@ object DependencyComputerProfilerJob {
       sessionsWithSize,
       conf.profilerMinSessionSize, conf.profilerMaxSessionSize, conf.profilerSamplesPerSize)
 
+    sampleSessions.cache()
+
     val dependencyProfiler: DependencyComputer =
       new Neo4JDependencyComputerProfiler(conf.neoBoltUrl, conf.neoUsername, conf.neoPassword)
 
