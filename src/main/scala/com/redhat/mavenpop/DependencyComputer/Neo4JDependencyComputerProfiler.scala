@@ -9,10 +9,39 @@ import org.neo4j.driver.v1.{ AuthTokens, Config, GraphDatabase, Session }
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
+import Neo4JDependencyComputerProfiler._
 
 object Neo4JDependencyComputerProfiler {
 
   case class ProfilerResult(elapsedMillis: Long, dependencies: ArrayBuffer[String])
+
+  def getTraversalWork(neo4jSession: Session, gavList: java.util.List[String]): Either[TransactionFailureReason, Int] = {
+
+    //Using Either instead of Try/Success/Failure because the ClientError exception is not catched by scala.util.Try()
+
+    val parameters = Map[String, Object]("gavList" -> gavList).asJava
+
+    try {
+
+      //      val t1 = System.nanoTime()
+
+      val result = neo4jSession.run(CypherQueries.GetTraversalWork, parameters)
+
+      val traversalWork = result.single().get(0).asInt()
+
+      //      val elapsedMillis = (System.nanoTime() - t1) / 1000000
+
+      Right(traversalWork)
+
+    } catch {
+      case e: Throwable => {
+        if (e.isInstanceOf[ClientException] && e.getMessage.contains("timeout"))
+          Left(TransactionFailureReason.TIMEOUT)
+        else
+          Left(TransactionFailureReason.OTHER)
+      }
+    }
+  }
 
   def getDependencies(neo4jSession: Session, gavList: java.util.List[String]): Either[TransactionFailureReason, ProfilerResult] = {
 
@@ -110,19 +139,33 @@ class Neo4JDependencyComputerProfiler(
 
         //precondition: gavList.size >= 1
 
+        var resultRow: Row = row
         val gavList = row.getAs[Seq[String]]("gavs").asJava
 
-        Neo4JDependencyComputerProfiler.getDependencies(neo4jSession, gavList) match {
+        getDependencies(neo4jSession, gavList) match {
           case Right(result) => {
-            // add dependencies, elapsed computing in milliseconds and error = None
-            Row.fromSeq(row.toSeq ++ Array(result.dependencies, result.elapsedMillis, null))
+            // add dependencies, elapsed computing in milliseconds and errorDeps = null
+            resultRow = Row.fromSeq(resultRow.toSeq ++ Array(result.dependencies, result.elapsedMillis, null))
           }
 
           case Left(failureReason) => {
-            // add dependencies = None, elapsed time = None with failure reason
-            Row.fromSeq(row.toSeq ++ Array(null, null, failureReason.toString))
+            // add dependencies = null, elapsed time = None with failure reason
+            resultRow = Row.fromSeq(resultRow.toSeq ++ Array(null, null, failureReason.toString))
           }
         }
+
+        //        getTraversalWork(neo4jSession, gavList) match {
+        //          case Right(traversalWork: Int) => {
+        //            // add traversalwork and errorTrav = null
+        //            resultRow = Row.fromSeq(resultRow.toSeq ++ Array(traversalWork, null))
+        //          }
+        //          case Left(failureReason) => {
+        //            // add dependencies = null,  with failure reason
+        //            resultRow = Row.fromSeq(resultRow.toSeq ++ Array(null, failureReason.toString))
+        //          }
+        //        }
+
+        resultRow
 
       }).toList
 
@@ -133,9 +176,10 @@ class Neo4JDependencyComputerProfiler(
     })
 
     val newSchema = StructType(sessions.schema.fields ++ Array[StructField](
-      StructField("dependencies", ArrayType(StringType, true), true),
-      StructField("execMillis", LongType, true),
-      StructField("error", StringType, true)))
+      StructField("dependencies", ArrayType(StringType, true), true), StructField("execMillis", LongType, true), StructField("errorDeps", StringType, true)
+    //      , StructField("traversalWork", IntegerType, true)
+    //      , StructField("errorTrav", StringType, true)
+    ))
 
     val sessionsWithTime = spark.createDataFrame(sessionsWithTimeRdd, newSchema)
     //    sessionsWithTime.cache

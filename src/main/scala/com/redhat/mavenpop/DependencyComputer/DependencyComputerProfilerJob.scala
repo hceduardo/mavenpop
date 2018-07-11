@@ -26,6 +26,7 @@ object DependencyComputerProfilerJob {
     val sessionsWithSize = sessions.withColumn("size", size($"gavs"))
     //    val sampleSessions = takeSampleSessions(sessionsWithSize, 10, 40)
 
+
     val sampleSessions = takeSampleSessions(
       sessionsWithSize,
       conf.profilerMinSessionSize, conf.profilerMaxSessionSize, conf.profilerSamplesPerSize)
@@ -41,7 +42,7 @@ object DependencyComputerProfilerJob {
 
     spark.stop()
   }
-
+  
   private def takeSampleSessions(
     sessionsWithSize: DataFrame,
     minSessionSize: Int, maxSessionSize: Int,
