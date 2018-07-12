@@ -6,7 +6,7 @@ import scala.io.Source
 
 object DependencyParserApp {
 
-  val logger = LogManager.getLogger(getClass.getName)
+  private val logger = LogManager.getLogger(getClass.getName)
 
   def main(args: Array[String]): Unit = {
 

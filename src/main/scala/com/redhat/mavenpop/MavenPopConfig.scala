@@ -20,17 +20,23 @@ class MavenPopConfig() {
   val gavLogsPath = config.getString("mavenpop.path.gavlogs")
   val sessionsPath = config.getString("mavenpop.path.sessions")
   val sessionsWithDepsPath = config.getString("mavenpop.path.sessionsWithDeps")
-  val sessionsWithTimePath = config.getString("mavenpop.path.sessionsWithTime")
+  val sessionCountPath = config.getString("mavenpop.path.sessionCount")
+  val profilerSamplePrefix = config.getString("mavenpop.path.sampleSessionsPrefix")
+  val sessionsBenchmarksPrefix = config.getString("mavenpop.path.sessionsBenchmarksPrefix")
 
   val sessionMaxIdleMillis = config.getLong("mavenpop.sessions.maxIdleMillis")
   val neoBoltUrl = config.getString("mavenpop.neo4j.boltUrl")
   val neoUsername = config.getString("mavenpop.neo4j.username")
   val neoPassword = config.getString("mavenpop.neo4j.password")
 
-  val profilerVersion = config.getInt("mavenpop.dependencyComputerProfiler.version")
   val profilerMaxSessionSize = config.getInt("mavenpop.dependencyComputerProfiler.maxSessionSize")
   val profilerMinSessionSize = config.getInt("mavenpop.dependencyComputerProfiler.minSessionSize")
   val profilerSamplesPerSize = config.getInt("mavenpop.dependencyComputerProfiler.samplesPerSize")
+  val profilerDepthStart = config.getInt("mavenpop.dependencyComputerProfiler.depth.start")
+  val profilerDepthEnd = config.getInt("mavenpop.dependencyComputerProfiler.depth.end")
+  val profilerDepthStep = config.getInt("mavenpop.dependencyComputerProfiler.depth.step")
+  val profilerUseCacheSamples = config.getBoolean("mavenpop.dependencyComputerProfiler.useCacheSamples")
+  val profilerCacheSamples = config.getBoolean("mavenpop.dependencyComputerProfiler.cacheSamples")
 
   override def toString(): String = {
     val s: StringBuilder = new StringBuilder()

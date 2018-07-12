@@ -13,6 +13,8 @@ import Neo4JDependencyComputerProfiler._
 
 object Neo4JDependencyComputerProfiler {
 
+  val defaultDepth: Short = 1000
+
   case class ProfilerResult(elapsedMillis: Long, dependencies: ArrayBuffer[String])
 
   def getTraversalWork(neo4jSession: Session, gavList: java.util.List[String]): Either[TransactionFailureReason, Int] = {
@@ -43,7 +45,7 @@ object Neo4JDependencyComputerProfiler {
     }
   }
 
-  def getDependencies(neo4jSession: Session, gavList: java.util.List[String]): Either[TransactionFailureReason, ProfilerResult] = {
+  def getDependencies(neo4jSession: Session, gavList: java.util.List[String], depth: Int): Either[TransactionFailureReason, ProfilerResult] = {
 
     //Using Either instead of Try/Success/Failure because the ClientError exception is not catched by scala.util.Try()
 
@@ -53,7 +55,7 @@ object Neo4JDependencyComputerProfiler {
 
       val t1 = System.nanoTime()
 
-      val result = neo4jSession.run(CypherQueries.GetDependenciesFromList, parameters)
+      val result = neo4jSession.run(CypherQueries.GetDependenciesFromList(depth), parameters)
       val deps = new ArrayBuffer[String]()
 
       while (result.hasNext) {
@@ -77,11 +79,16 @@ object Neo4JDependencyComputerProfiler {
 
 //@SerialVersionUID(100L)
 class Neo4JDependencyComputerProfiler(
-  boltUrl: String, username: String, password: String, testConfig: Boolean)
+  boltUrl: String, username: String, password: String,
+  depth: Int, testConfig: Boolean)
   extends DependencyComputer {
 
+  def this(boltUrl: String, username: String, password: String, depth: Int) {
+    this(boltUrl, username, password, depth, false)
+  }
+
   def this(boltUrl: String, username: String, password: String) {
-    this(boltUrl, username, password, false)
+    this(boltUrl, username, password, defaultDepth, false)
   }
 
 /***
@@ -142,7 +149,7 @@ class Neo4JDependencyComputerProfiler(
         var resultRow: Row = row
         val gavList = row.getAs[Seq[String]]("gavs").asJava
 
-        getDependencies(neo4jSession, gavList) match {
+        getDependencies(neo4jSession, gavList, depth) match {
           case Right(result) => {
             // add dependencies, elapsed computing in milliseconds and errorDeps = null
             resultRow = Row.fromSeq(resultRow.toSeq ++ Array(result.dependencies, result.elapsedMillis, null))
