@@ -4,6 +4,7 @@ spark-warehouse
 project/target
 out
 in
+log
 
 # Intellij recommendations
 # Ref: https://github.com/github/gitignore/blob/master/Global/JetBrains.gitignore

@@ -7,7 +7,6 @@ object Experiment3 {
 
   val logger = LogManager.getLogger(this.getClass.getName)
   def main(args: Array[String]): Unit = {
-    logger.info("hola")
 
     val spark = SparkSession.builder.appName("Experiment")
       .master("local[*]")

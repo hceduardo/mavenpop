@@ -62,6 +62,38 @@ mavenpop:test:top2,mavenpop:test:dep3"""
     assertParseDependencies(sourceStr, expectedNodeStr, expectedRelStr)
   }
 
+  it should "handle duplicate gavs and dependencies" in {
+
+    val sourceStr =
+      """1 p mavenpop:test:top1 mavenpop:test:dep1,mavenpop:test:dep2,mavenpop:test:dep3
+1 p mavenpop:test:top2 mavenpop:test:dep4,mavenpop:test:dep1,mavenpop:test:dep3
+1 p mavenpop:test:top3 UNKNOWN_DEPS
+1 p mavenpop:test:top4 NO_DEPS
+1 p mavenpop:test:top1 mavenpop:test:dep6"""
+
+    val expectedNodeStr =
+      """mavenpop:test:top1
+mavenpop:test:dep1
+mavenpop:test:dep2
+mavenpop:test:dep3
+mavenpop:test:top2
+mavenpop:test:dep4
+mavenpop:test:dep6
+mavenpop:test:top3
+mavenpop:test:top4"""
+
+    val expectedRelStr =
+      """mavenpop:test:top1,mavenpop:test:dep1
+mavenpop:test:top1,mavenpop:test:dep2
+mavenpop:test:top1,mavenpop:test:dep3
+mavenpop:test:top2,mavenpop:test:dep4
+mavenpop:test:top2,mavenpop:test:dep1
+mavenpop:test:top2,mavenpop:test:dep3
+mavenpop:test:top1,mavenpop:test:dep6"""
+
+    assertParseDependencies(sourceStr, expectedNodeStr, expectedRelStr)
+  }
+
   private def assertParseDependencies(sourceStr: String, expectedNodeStr: String, expectedRelStr: String) = {
     source = Source.fromString(
       sourceStr.stripMargin)

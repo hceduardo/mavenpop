@@ -3,16 +3,18 @@ package com.redhat.mavenpop.DependencyComputer
 import com.redhat.mavenpop.TransactionFailureReason
 import com.redhat.mavenpop.TransactionFailureReason.TransactionFailureReason
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{ DataFrame, Row, SparkSession }
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.neo4j.driver.v1.exceptions.ClientException
-import org.neo4j.driver.v1.{ AuthTokens, Config, GraphDatabase, Session }
+import org.neo4j.driver.v1.{AuthTokens, Config, GraphDatabase, Session}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import Neo4JDependencyComputerProfiler._
+import org.apache.log4j.LogManager
 
 object Neo4JDependencyComputerProfiler {
 
+  @transient private lazy val logger = LogManager.getLogger(getClass.getName)
   val defaultDepth: Short = 1000
 
   case class ProfilerResult(elapsedMillis: Long, dependencies: ArrayBuffer[String])
@@ -64,6 +66,8 @@ object Neo4JDependencyComputerProfiler {
 
       val elapsedMillis = (System.nanoTime() - t1) / 1000000
 
+      logger.debug(s"Query: ${CypherQueries.GetDependenciesFromList(depth)}, gavs: ${gavList.asScala.mkString(",")}")
+
       Right(ProfilerResult(elapsedMillis, deps))
 
     } catch {
@@ -82,6 +86,8 @@ class Neo4JDependencyComputerProfiler(
   boltUrl: String, username: String, password: String,
   depth: Int, testConfig: Boolean)
   extends DependencyComputer {
+
+  @transient private lazy val logger = LogManager.getLogger(getClass.getName)
 
   def this(boltUrl: String, username: String, password: String, depth: Int) {
     this(boltUrl, username, password, depth, false)
