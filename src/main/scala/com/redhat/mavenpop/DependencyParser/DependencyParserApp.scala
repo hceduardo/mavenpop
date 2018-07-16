@@ -32,7 +32,7 @@ object DependencyParserApp {
 
       val parser = new NeoDataParser()
 
-      parser.parseDependencies(source, outGav, outDep)
+      parser.parseDependencies(source, outGav, outDep, true)
 
       logger.info("Parsing finished successfully")
       logger.info(s"Generated ${parser.gavCount} unique gavs to ${outGavFilename}")

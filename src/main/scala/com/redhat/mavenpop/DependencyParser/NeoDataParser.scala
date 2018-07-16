@@ -26,33 +26,9 @@ class NeoDataParser {
   def depCount = _depCount
 
   private val logger = LogManager.getLogger(getClass.getName)
-  val dependencyMap = new DependencyMap()
+  private val dependencyMap = new DependencyMap()
 
-  class DependencyMap(){
-    private val map = mutable.Map[String, scala.collection.mutable.Set[String]]()
-    private val excludedDeps = Set[String]("UNKNOWN_DEPS", "NO_DEPS")
-
-    def isEmpty: Boolean = map.isEmpty
-
-    def getEntries: Iterator[(String, mutable.Set[String])] = {map.iterator}
-
-    def add(gav: String, dependencies: Set[String]): Unit ={
-
-      val _deps = dependencies -- excludedDeps
-
-      _deps.foreach(dep => {
-        if(!map.contains(dep)){
-          map(dep) = mutable.Set.empty[String]
-        }
-      })
-
-      map.contains(gav) match {
-        case false => map(gav) = mutable.Set(_deps.toSeq: _*)
-        case true => map(gav) ++= _deps
-      }
-    }
-
-  }
+  private val transitiveDependencyMap = mutable.Map[String, scala.collection.mutable.Set[String]]()
 
   private def parseDependencyMap(source: Source): Unit = {
 
@@ -71,18 +47,20 @@ class NeoDataParser {
     })
   }
 
-  private def writeDependencyMap(outGav: PrintWriter, outDep: PrintWriter) = {
+  private def writeDependencyMap(outGav: PrintWriter, outDep: PrintWriter,
+                                 mapEntries: Iterator[(String, mutable.Set[String])]) = {
     assert(!dependencyMap.isEmpty)
 
     outGav.println(NeoDataParser.HEADER_NODE_GAV)
     outDep.println(NeoDataParser.HEADER_REL_DEP)
 
-    dependencyMap.getEntries.foreach{ case(gav: String, dependencies: mutable.Set[String]) =>
+    mapEntries.foreach {
+      case (gav: String, dependencies: mutable.Set[String]) =>
 
         outGav.println(s"${gav}${NeoDataParser.DELIMITER}${NeoDataParser.LABEL_NODE_GAV}")
         _gavCount += 1
 
-        dependencies.foreach{dep =>
+        dependencies.foreach { dep =>
           outDep.println(s"${gav}${NeoDataParser.DELIMITER}${dep}${NeoDataParser.DELIMITER}${NeoDataParser.LABEL_REL_DEP}")
           _depCount += 1
         }
@@ -90,11 +68,58 @@ class NeoDataParser {
     }
   }
 
-  def parseDependencies(source: Source, outGav: PrintWriter, outDep: PrintWriter) = {
-    logger.info("Parsing input file...")
-    parseDependencyMap(source)
-    logger.info("Writing output files...")
-    writeDependencyMap(outGav, outDep)
+  private def buildTransitives(gav: String, visited: mutable.Set[String]): mutable.Set[String] ={
+    if(transitiveDependencyMap.contains(gav)){
+      return transitiveDependencyMap(gav)
+    }
+
+    visited.add(gav)
+
+    val transitives = mutable.Set.empty[String]
+
+    if(dependencyMap.contains(gav)){
+      val directs = dependencyMap(gav)
+      transitives ++= directs
+
+      directs.foreach { direct: String =>
+        if(!visited.contains(direct)){
+          visited += direct
+          transitives ++= buildTransitives(direct, visited)
+        }
+      }
+
+    }
+
+    transitiveDependencyMap(gav) = transitives
+    return transitives
+
   }
+
+  private def buildTransitiveDependencyMap()={
+    dependencyMap.iterator.foreach{ case (gav: String, _) =>
+      buildTransitives(gav, mutable.Set.empty[String])
+    }
+  }
+
+  def parseDependencies(source: Source, outGav: PrintWriter, outDep: PrintWriter, writeTransitiveAsDirect: Boolean): Unit = {
+    logger.info("Parsing input file...")
+    parseDependencyMap(source) //populate dependencyMap
+
+    if(!writeTransitiveAsDirect){
+      logger.info("Writing output files...")
+      writeDependencyMap(outGav, outDep, dependencyMap.iterator)
+      return
+    }
+
+    logger.info("generating transitive dependency map")
+    buildTransitiveDependencyMap()
+
+    logger.info("Writing output files...")
+    writeDependencyMap(outGav, outDep, transitiveDependencyMap.iterator)
+
+  }
+
+  def parseDependencies(source: Source, outGav: PrintWriter, outDep: PrintWriter): Unit =
+    parseDependencies(source, outGav, outDep, false)
 
 }

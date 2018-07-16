@@ -29,8 +29,9 @@ class MavenPopConfig() {
   val neoUsername = config.getString("mavenpop.neo4j.username")
   val neoPassword = config.getString("mavenpop.neo4j.password")
 
-  val profilerMaxSessionSize = config.getInt("mavenpop.dependencyComputerProfiler.maxSessionSize")
-  val profilerMinSessionSize = config.getInt("mavenpop.dependencyComputerProfiler.minSessionSize")
+  val profilerSessionSizeEnd = config.getInt("mavenpop.dependencyComputerProfiler.sessionSize.end")
+  val profilerSessionSizeStart = config.getInt("mavenpop.dependencyComputerProfiler.sessionSize.start")
+  val profilerSessionSizeStep = config.getInt("mavenpop.dependencyComputerProfiler.sessionSize.step")
   val profilerSamplesPerSize = config.getInt("mavenpop.dependencyComputerProfiler.samplesPerSize")
   val profilerDepthStart = config.getInt("mavenpop.dependencyComputerProfiler.depth.start")
   val profilerDepthEnd = config.getInt("mavenpop.dependencyComputerProfiler.depth.end")

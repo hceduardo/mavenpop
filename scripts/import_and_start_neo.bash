@@ -47,7 +47,7 @@ function wait_neo_server_online(){
 
 function add_constraints_and_indexes(){
     "$NEO4J_HOME"/bin/cypher-shell \
-        -a "bolt://localhost:7687" \
+        -a "bolt://localhost:17687" \
         -u neo4j -p ${SECRET} \
         "CREATE CONSTRAINT ON (gav:GAV) ASSERT gav.id IS UNIQUE"
 }

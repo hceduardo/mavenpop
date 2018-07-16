@@ -3,9 +3,9 @@ package com.redhat.mavenpop.DependencyComputer
 import com.redhat.mavenpop.TransactionFailureReason
 import com.redhat.mavenpop.TransactionFailureReason.TransactionFailureReason
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{ DataFrame, Row, SparkSession }
 import org.neo4j.driver.v1.exceptions.ClientException
-import org.neo4j.driver.v1.{AuthTokens, Config, GraphDatabase, Session}
+import org.neo4j.driver.v1.{ AuthTokens, Config, GraphDatabase, Session }
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer

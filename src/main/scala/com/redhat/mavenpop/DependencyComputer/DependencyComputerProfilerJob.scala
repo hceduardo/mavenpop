@@ -30,7 +30,7 @@ object DependencyComputerProfilerJob {
 
     val (samplePrefix, resultPrefix, minSess, maxSess, sampleCount) =
       (conf.profilerSamplePrefix, conf.sessionsBenchmarksPrefix,
-        conf.profilerMinSessionSize, conf.profilerMaxSessionSize, conf.profilerSamplesPerSize)
+        conf.profilerSessionSizeStart, conf.profilerSessionSizeEnd, conf.profilerSamplesPerSize)
     val sampleSessionsPath = s"$samplePrefix-$minSess-$maxSess-$sampleCount.parquet"
     val outPrefix = s"$resultPrefix-$minSess-$maxSess-$sampleCount"
     val sessionCountPath = conf.sessionCountPath
@@ -79,7 +79,8 @@ object DependencyComputerProfilerJob {
     logger.info("create sample sessions transformation scheduled")
     val _s = createSampleSessions(
       sessionsWithSize,
-      conf.profilerMinSessionSize, conf.profilerMaxSessionSize, conf.profilerSamplesPerSize)
+      conf.profilerSessionSizeStart, conf.profilerSessionSizeEnd, conf.profilerSessionSizeStep,
+      conf.profilerSamplesPerSize)
 
     if (conf.profilerCacheSamples) {
       logger.info("caching sample sessions to disk")
@@ -111,7 +112,7 @@ object DependencyComputerProfilerJob {
 
   private def createSampleSessions(
     sessionsWithSize: DataFrame,
-    minSessionSize: Int, maxSessionSize: Int,
+    minSessionSize: Int, maxSessionSize: Int, sessionSizeStep: Int,
     samplesPerSize: Int): DataFrame = {
 
     assert(minSessionSize >= 2)
@@ -119,11 +120,12 @@ object DependencyComputerProfilerJob {
 
     var sessionSize = minSessionSize
     var samples = sessionsWithSize.filter(s"gavsSize == $sessionSize").limit(samplesPerSize)
+    sessionSize += sessionSizeStep
 
-    while (sessionSize < maxSessionSize) {
-      sessionSize += 1
+    while (sessionSize <= maxSessionSize) {
       val s = sessionsWithSize.filter(s"gavsSize == $sessionSize").limit(samplesPerSize)
       samples = samples.union(s)
+      sessionSize += sessionSizeStep
     }
 
     return samples

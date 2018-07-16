@@ -59,7 +59,7 @@ mavenpop:test:top2,mavenpop:test:dep4
 mavenpop:test:top2,mavenpop:test:dep1
 mavenpop:test:top2,mavenpop:test:dep3"""
 
-    assertParseDependencies(sourceStr, expectedNodeStr, expectedRelStr)
+    assertParseDependencies(sourceStr, expectedNodeStr, expectedRelStr, false)
   }
 
   it should "handle duplicate gavs and dependencies" in {
@@ -91,10 +91,38 @@ mavenpop:test:top2,mavenpop:test:dep1
 mavenpop:test:top2,mavenpop:test:dep3
 mavenpop:test:top1,mavenpop:test:dep6"""
 
-    assertParseDependencies(sourceStr, expectedNodeStr, expectedRelStr)
+    assertParseDependencies(sourceStr, expectedNodeStr, expectedRelStr, false)
   }
 
-  private def assertParseDependencies(sourceStr: String, expectedNodeStr: String, expectedRelStr: String) = {
+  it should "write transitive dependencies given writeTransitiveAsDirect is true" in {
+
+    val sourceStr =
+      """1 p mavenpop:test:top1 mavenpop:test:dep1,mavenpop:test:dep2
+1 p mavenpop:test:dep1 mavenpop:test:dep11
+1 p mavenpop:test:dep11 mavenpop:test:dep111"""
+
+    val expectedNodeStr =
+      """mavenpop:test:top1
+mavenpop:test:dep1
+mavenpop:test:dep2
+mavenpop:test:dep11
+mavenpop:test:dep111"""
+
+    val expectedRelStr =
+      """mavenpop:test:top1,mavenpop:test:dep1
+mavenpop:test:top1,mavenpop:test:dep2
+mavenpop:test:dep1,mavenpop:test:dep11
+mavenpop:test:dep1,mavenpop:test:dep111
+mavenpop:test:dep11,mavenpop:test:dep111
+mavenpop:test:top1,mavenpop:test:dep11
+mavenpop:test:top1,mavenpop:test:dep111"""
+
+    assertParseDependencies(sourceStr, expectedNodeStr, expectedRelStr, true)
+  }
+
+
+  private def assertParseDependencies(sourceStr: String, expectedNodeStr: String, expectedRelStr: String,
+                                      writeTransitiveAsDirect: Boolean) = {
     source = Source.fromString(
       sourceStr.stripMargin)
 
@@ -106,7 +134,7 @@ mavenpop:test:top1,mavenpop:test:dep6"""
       split("\n").map(_ + NeoDataParser.DELIMITER + NeoDataParser.LABEL_REL_DEP)
 
     val parser = new NeoDataParser()
-    parser.parseDependencies(source, outGav, outDep)
+    parser.parseDependencies(source, outGav, outDep, writeTransitiveAsDirect)
 
     val outGavArr = outGavString.toString.split("\n")
     val outDepArr = outDepString.toString.split("\n")
