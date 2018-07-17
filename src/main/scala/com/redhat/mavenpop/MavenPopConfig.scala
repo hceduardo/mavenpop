@@ -23,6 +23,7 @@ class MavenPopConfig() {
   val sessionCountPath = config.getString("mavenpop.path.sessionCount")
   val profilerSamplePrefix = config.getString("mavenpop.path.sampleSessionsPrefix")
   val sessionsBenchmarksPrefix = config.getString("mavenpop.path.sessionsBenchmarksPrefix")
+  val parserWriteTransitive = config.getBoolean("mavenpop.parser.writeTransitive")
 
   val sessionMaxIdleMillis = config.getLong("mavenpop.sessions.maxIdleMillis")
   val neoBoltUrl = config.getString("mavenpop.neo4j.boltUrl")

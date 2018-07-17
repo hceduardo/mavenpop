@@ -47,34 +47,42 @@ object Neo4JDependencyComputerProfiler {
     }
   }
 
-  def getDependencies(neo4jSession: Session, gavList: java.util.List[String], depth: Int): Either[TransactionFailureReason, ProfilerResult] = {
+  def getDependencies(neo4jSession: Session, gavList: java.util.List[String], depth: Int, debugIndex: String): Either[TransactionFailureReason, ProfilerResult] = {
 
     //Using Either instead of Try/Success/Failure because the ClientError exception is not catched by scala.util.Try()
 
     val parameters = Map[String, Object]("gavList" -> gavList).asJava
+    val query = CypherQueries.GetDependenciesFromListV2(depth)
 
     try {
 
+      val queryGavs = gavList.asScala.mkString(",")
       val t1 = System.nanoTime()
 
-      val result = neo4jSession.run(CypherQueries.GetDependenciesFromList(depth), parameters)
+      logger.debug(s"sent query for row: $debugIndex")
+      val result = neo4jSession.run(query, parameters)
+      logger.debug(s"ended session.run call for row: $debugIndex")
+
       val deps = new ArrayBuffer[String]()
 
       while (result.hasNext) {
         deps.append(result.next().get(0).asString())
       }
 
+      logger.debug(s"ended result consumption for row: $debugIndex")
+
       val elapsedMillis = (System.nanoTime() - t1) / 1000000
 
-      logger.debug(s"Query: ${CypherQueries.GetDependenciesFromList(depth)}, gavs: ${gavList.asScala.mkString(",")}")
+      logger.debug(s"ROW: $debugIndex , ellapsedMillis: $elapsedMillis")
 
       Right(ProfilerResult(elapsedMillis, deps))
 
     } catch {
       case e: Throwable => {
-        if (e.isInstanceOf[ClientException] && e.getMessage.contains("timeout"))
+        if (e.isInstanceOf[ClientException] && e.getMessage.contains("timeout")) {
+          logger.debug(s"ROW $debugIndex Timed out")
           Left(TransactionFailureReason.TIMEOUT)
-        else
+        } else
           Left(TransactionFailureReason.OTHER)
       }
     }
@@ -131,62 +139,66 @@ class Neo4JDependencyComputerProfiler(
     // Use of map partitions to create one connection per partition in workers See:
     //  https://spark.apache.org/docs/latest/streaming-programming-guide.html#design-patterns-for-using-foreachrdd
 
-    val sessionsWithTimeRdd = sessions.rdd.mapPartitions(iter => {
+    val sessionsWithTimeRdd = sessions.rdd /*.repartition(1)*/ .mapPartitionsWithIndex {
+      case (partIndex, iter) =>
 
-      //ToDo: instead of instantiating a new driver for each partition, consider a  connection pool
-      //      val driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
+        //ToDo: instead of instantiating a new driver for each partition, consider a  connection pool
+        //      val driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
 
-      val driver = if (testConfig_)
-        GraphDatabase.driver(boltUrl_, AuthTokens.basic(username_, password_), Config.build().
-          withoutEncryption().
-          toConfig)
-      else
-        GraphDatabase.driver(boltUrl_, AuthTokens.basic(username_, password_), Config.defaultConfig())
+        val driver = if (testConfig_)
+          GraphDatabase.driver(boltUrl_, AuthTokens.basic(username_, password_), Config.build().
+            withoutEncryption().
+            toConfig)
+        else
+          GraphDatabase.driver(boltUrl_, AuthTokens.basic(username_, password_), Config.defaultConfig())
 
-      val neo4jSession = driver.session
+        val neo4jSession = driver.session
 
-      //using toList to force eager computation of the map. Otherwise the connection is closed before the map is computed
-      //ToDo: evaluate better ways of forcing eager computation (for ex: closing the connection inside the map if(iter.isempty))
-      // https://stackoverflow.com/questions/36545579/spark-how-to-use-mappartition-and-create-close-connection-per-partition/36545821#36545821
-      val result = iter.map(row => {
+        var rowNo: Long = 0L
+        //using toList to force eager computation of the map. Otherwise the connection is closed before the map is computed
+        //ToDo: evaluate better ways of forcing eager computation (for ex: closing the connection inside the map if(iter.isempty))
+        // https://stackoverflow.com/questions/36545579/spark-how-to-use-mappartition-and-create-close-connection-per-partition/36545821#36545821
 
-        //precondition: gavList.size >= 1
+        val result = iter.zipWithIndex.map {
+          case (row, index) =>
 
-        var resultRow: Row = row
-        val gavList = row.getAs[Seq[String]]("gavs").asJava
+            //precondition: gavList.size >= 1
+            logger.debug(s"started processing row $index")
+            var resultRow: Row = row
+            val gavList = row.getAs[Seq[String]]("gavs").asJava
 
-        getDependencies(neo4jSession, gavList, depth) match {
-          case Right(result) => {
-            // add dependencies, elapsed computing in milliseconds and errorDeps = null
-            resultRow = Row.fromSeq(resultRow.toSeq ++ Array(result.dependencies, result.elapsedMillis, null))
-          }
+            getDependencies(neo4jSession, gavList, depth, s"$partIndex-$index") match {
+              case Right(result) => {
+                // add dependencies, elapsed computing in milliseconds and errorDeps = null
+                resultRow = Row.fromSeq(resultRow.toSeq ++ Array(result.dependencies, result.elapsedMillis, null))
+              }
 
-          case Left(failureReason) => {
-            // add dependencies = null, elapsed time = None with failure reason
-            resultRow = Row.fromSeq(resultRow.toSeq ++ Array(null, null, failureReason.toString))
-          }
-        }
+              case Left(failureReason) => {
+                // add dependencies = null, elapsed time = None with failure reason
+                resultRow = Row.fromSeq(resultRow.toSeq ++ Array(null, null, failureReason.toString))
+              }
+            }
 
-        //        getTraversalWork(neo4jSession, gavList) match {
-        //          case Right(traversalWork: Int) => {
-        //            // add traversalwork and errorTrav = null
-        //            resultRow = Row.fromSeq(resultRow.toSeq ++ Array(traversalWork, null))
-        //          }
-        //          case Left(failureReason) => {
-        //            // add dependencies = null,  with failure reason
-        //            resultRow = Row.fromSeq(resultRow.toSeq ++ Array(null, failureReason.toString))
-        //          }
-        //        }
+            //        getTraversalWork(neo4jSession, gavList) match {
+            //          case Right(traversalWork: Int) => {
+            //            // add traversalwork and errorTrav = null
+            //            resultRow = Row.fromSeq(resultRow.toSeq ++ Array(traversalWork, null))
+            //          }
+            //          case Left(failureReason) => {
+            //            // add dependencies = null,  with failure reason
+            //            resultRow = Row.fromSeq(resultRow.toSeq ++ Array(null, failureReason.toString))
+            //          }
+            //        }
+            logger.debug(s"finishing processing row $index")
+            resultRow
 
-        resultRow
+        }.toList
 
-      }).toList
+        neo4jSession.close()
+        driver.close()
 
-      neo4jSession.close()
-      driver.close()
-
-      result.iterator
-    })
+        result.iterator
+    }
 
     val newSchema = StructType(sessions.schema.fields ++ Array[StructField](
       StructField("dependencies", ArrayType(StringType, true), true), StructField("execMillis", LongType, true), StructField("errorDeps", StringType, true)

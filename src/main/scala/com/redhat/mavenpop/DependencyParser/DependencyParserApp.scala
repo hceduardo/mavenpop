@@ -1,7 +1,10 @@
 package com.redhat.mavenpop.DependencyParser
 
 import java.io.{ PrintWriter, StringWriter }
+
+import com.redhat.mavenpop.MavenPopConfig
 import org.apache.log4j.LogManager
+
 import scala.io.Source
 
 object DependencyParserApp {
@@ -9,6 +12,8 @@ object DependencyParserApp {
   private val logger = LogManager.getLogger(getClass.getName)
 
   def main(args: Array[String]): Unit = {
+
+    val conf: MavenPopConfig = new MavenPopConfig()
 
     if (args.length != 3) {
       println("usage: neoDataParser INPUT_FILE OUTGAVFILE OUTDEPFILE")
@@ -23,7 +28,7 @@ object DependencyParserApp {
     var outGav: PrintWriter = null
     var outDep: PrintWriter = null
 
-    var exceptionCatched = false
+    var exceptionCaught = false
 
     try {
       source = Source.fromFile(inFilename)
@@ -32,7 +37,7 @@ object DependencyParserApp {
 
       val parser = new NeoDataParser()
 
-      parser.parseDependencies(source, outGav, outDep, true)
+      parser.parseDependencies(source, outGav, outDep, conf.parserWriteTransitive)
 
       logger.info("Parsing finished successfully")
       logger.info(s"Generated ${parser.gavCount} unique gavs to ${outGavFilename}")
@@ -44,13 +49,13 @@ object DependencyParserApp {
         val sw = new StringWriter
         e.printStackTrace(new PrintWriter(sw))
         logger.error(sw.toString)
-        exceptionCatched = true
+        exceptionCaught = true
       }
     } finally {
       source.close()
       outGav.close()
       outDep.close()
-      if (exceptionCatched) {
+      if (exceptionCaught) {
         System.exit(1)
       }
     }

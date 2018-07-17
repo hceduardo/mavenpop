@@ -25,10 +25,33 @@ class NeoDataParser {
   def gavCount = _gavCount
   def depCount = _depCount
 
-  private val logger = LogManager.getLogger(getClass.getName)
-  private val dependencyMap = new DependencyMap()
-
+  private val dependencyMap = mutable.Map[String, scala.collection.mutable.Set[String]]()
   private val transitiveDependencyMap = mutable.Map[String, scala.collection.mutable.Set[String]]()
+  private val excludedDeps = Set[String]("UNKNOWN_DEPS", "NO_DEPS")
+
+  private val logger = LogManager.getLogger(getClass.getName)
+
+  def addDirectDep(gav: String, dependencies: Set[String]): Unit = {
+
+    // Do not add UNKNOWN_DEPS or NO_DEPS nodes
+    if(dependencies.size == 1 && excludedDeps.contains(dependencies.toSeq(0))){
+      return
+    }
+
+    val _deps = dependencies -- excludedDeps
+
+    _deps.foreach(dep => {
+      if (!dependencyMap.contains(dep)) {
+        dependencyMap(dep) = mutable.Set.empty[String]
+      }
+    })
+
+    dependencyMap.contains(gav) match {
+      case false => dependencyMap(gav) = mutable.Set(_deps.toSeq: _*)
+      case true => dependencyMap(gav) ++= _deps
+    }
+  }
+
 
   private def parseDependencyMap(source: Source): Unit = {
 
@@ -40,7 +63,7 @@ class NeoDataParser {
       DependencyRecord.parseLogLine(line) match {
         case None => logger.warn(s"could not parse line ${lineNumber}: ${line}")
         case Some(dependencyRecord) => {
-          dependencyMap.add(dependencyRecord.gav, dependencyRecord.dependencies.toSet)
+          addDirectDep(dependencyRecord.gav, dependencyRecord.dependencies.toSet)
         }
       }
 
@@ -48,13 +71,13 @@ class NeoDataParser {
   }
 
   private def writeDependencyMap(outGav: PrintWriter, outDep: PrintWriter,
-                                 mapEntries: Iterator[(String, mutable.Set[String])]) = {
+    mapEntries: Iterator[(String, mutable.Set[String])]) = {
     assert(!dependencyMap.isEmpty)
 
     outGav.println(NeoDataParser.HEADER_NODE_GAV)
     outDep.println(NeoDataParser.HEADER_REL_DEP)
 
-    mapEntries.foreach {
+    mapEntries.toSeq.sortBy(n => n._1).foreach {
       case (gav: String, dependencies: mutable.Set[String]) =>
 
         outGav.println(s"${gav}${NeoDataParser.DELIMITER}${NeoDataParser.LABEL_NODE_GAV}")
@@ -68,8 +91,8 @@ class NeoDataParser {
     }
   }
 
-  private def buildTransitives(gav: String, visited: mutable.Set[String]): mutable.Set[String] ={
-    if(transitiveDependencyMap.contains(gav)){
+  private def buildTransitives(gav: String, visited: mutable.Set[String]): mutable.Set[String] = {
+    if (transitiveDependencyMap.contains(gav)) {
       return transitiveDependencyMap(gav)
     }
 
@@ -77,12 +100,12 @@ class NeoDataParser {
 
     val transitives = mutable.Set.empty[String]
 
-    if(dependencyMap.contains(gav)){
+    if (dependencyMap.contains(gav)) {
       val directs = dependencyMap(gav)
       transitives ++= directs
 
       directs.foreach { direct: String =>
-        if(!visited.contains(direct)){
+        if (!visited.contains(direct)) {
           visited += direct
           transitives ++= buildTransitives(direct, visited)
         }
@@ -95,9 +118,10 @@ class NeoDataParser {
 
   }
 
-  private def buildTransitiveDependencyMap()={
-    dependencyMap.iterator.foreach{ case (gav: String, _) =>
-      buildTransitives(gav, mutable.Set.empty[String])
+  private def buildTransitiveDependencyMap() = {
+    dependencyMap.iterator.foreach {
+      case (gav: String, _) =>
+        buildTransitives(gav, mutable.Set.empty[String])
     }
   }
 
@@ -105,7 +129,7 @@ class NeoDataParser {
     logger.info("Parsing input file...")
     parseDependencyMap(source) //populate dependencyMap
 
-    if(!writeTransitiveAsDirect){
+    if (!writeTransitiveAsDirect) {
       logger.info("Writing output files...")
       writeDependencyMap(outGav, outDep, dependencyMap.iterator)
       return

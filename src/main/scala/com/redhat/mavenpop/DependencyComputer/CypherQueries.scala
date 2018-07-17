@@ -6,6 +6,33 @@ object CypherQueries {
 
   private val _conf: MavenPopConfig = new MavenPopConfig()
 
+  def GetDependenciesFromListV2(depth: Int): String = {
+    assert(depth >= 0)
+
+    depth match {
+      case 0 => {
+        """WITH $gavList as gavIds
+          |MATCH p = (topLevel)-[*1..]->(dependency)
+          |WHERE topLevel.id in gavIds AND dependency.id in gavIds AND
+          |ANY (gavId in gavIds WHERE (topLevel:GAV)-[:DEPENDS_ON*1..]->(dependency:GAV{id:gavId}))
+          |RETURN DISTINCT dependency.id AS dependencyId""".stripMargin
+      }
+      case 1 => {
+        """WITH $gavList as gavIds
+          |MATCH p = (topLevel:GAV)-[:DEPENDS_ON]->(dependency:GAV)
+          |WHERE topLevel.id in gavIds AND dependency.id in gavIds
+          |RETURN DISTINCT dependency.id AS dependencyId""".stripMargin
+      }
+      case _ => {
+        "WITH $gavList as gavIds " + s"""MATCH (dependency:GAV)
+          |WHERE dependency.id in gavIds AND
+          |ANY (gavId in gavIds WHERE (:GAV{id:gavId})-[:DEPENDS_ON*1..$depth]->(dependency))
+          |RETURN DISTINCT dependency.id AS dependencyId
+        """.stripMargin
+      }
+    }
+  }
+
   def GetDependenciesFromList(depth: Int): String = {
     assert(depth >= 0)
 
@@ -35,7 +62,7 @@ object CypherQueries {
 
   def GetDependenciesFromList: String = {
 
-    GetDependenciesFromList(1000)
+    GetDependenciesFromListV2(40)
     //    _conf.profilerVersion match {
     //      case 1 => _getDependenciesFromList_v1
     //      case 2 => _getDependenciesFromList_v2

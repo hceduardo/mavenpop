@@ -28,11 +28,12 @@ object DependencyComputerProfilerJob {
 
     import spark.implicits._
 
-    val (samplePrefix, resultPrefix, minSess, maxSess, sampleCount) =
+    val (samplePrefix, resultPrefix, minSess, maxSess, stepSess, sampleCount) =
       (conf.profilerSamplePrefix, conf.sessionsBenchmarksPrefix,
-        conf.profilerSessionSizeStart, conf.profilerSessionSizeEnd, conf.profilerSamplesPerSize)
-    val sampleSessionsPath = s"$samplePrefix-$minSess-$maxSess-$sampleCount.parquet"
-    val outPrefix = s"$resultPrefix-$minSess-$maxSess-$sampleCount"
+        conf.profilerSessionSizeStart, conf.profilerSessionSizeEnd, conf.profilerSessionSizeStep,
+        conf.profilerSamplesPerSize)
+    val sampleSessionsPath = s"$samplePrefix-$minSess-$maxSess-$stepSess-$sampleCount.parquet"
+    val outPrefix = s"$resultPrefix-$minSess-$maxSess-$stepSess-$sampleCount"
     val sessionCountPath = conf.sessionCountPath
 
     lazy val sessionsWithSize = spark.read.parquet(conf.sessionsPath).withColumn("gavsSize", size($"gavs"))
@@ -72,7 +73,7 @@ object DependencyComputerProfilerJob {
     path: String, sessionsWithSize: => DataFrame): DataFrame = {
 
     if (conf.profilerUseCacheSamples && dirExists(spark, path)) {
-      logger.info("using disk cached sample sessions")
+      logger.info(s"using disk cached sample sessions: $path")
       return spark.read.parquet(path)
     }
 
@@ -83,7 +84,7 @@ object DependencyComputerProfilerJob {
       conf.profilerSamplesPerSize)
 
     if (conf.profilerCacheSamples) {
-      logger.info("caching sample sessions to disk")
+      logger.info(s"caching sample sessions to disk: $path")
       _s.write.parquet(path)
     }
 
