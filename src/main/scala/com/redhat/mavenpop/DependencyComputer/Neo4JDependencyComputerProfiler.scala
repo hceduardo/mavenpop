@@ -47,16 +47,14 @@ object Neo4JDependencyComputerProfiler {
     }
   }
 
-  def getDependencies(neo4jSession: Session, gavList: java.util.List[String], depth: Int, debugIndex: String): Either[TransactionFailureReason, ProfilerResult] = {
+  def getDependencies(neo4jSession: Session, query: String, gavList: java.util.List[String], debugIndex: String): Either[TransactionFailureReason, ProfilerResult] = {
 
     //Using Either instead of Try/Success/Failure because the ClientError exception is not catched by scala.util.Try()
 
     val parameters = Map[String, Object]("gavList" -> gavList).asJava
-    val query = CypherQueries.GetDependenciesFromListV2(depth)
 
     try {
 
-      val queryGavs = gavList.asScala.mkString(",")
       val t1 = System.nanoTime()
 
       logger.debug(s"sent query for row: $debugIndex")
@@ -135,11 +133,14 @@ class Neo4JDependencyComputerProfiler(
     // ref: https://spark.apache.org/docs/latest/rdd-programming-guide.html#passing-functions-to-spark
 
     val (boltUrl_, username_, password_, testConfig_) = (boltUrl, username, password, testConfig)
+    val query_ = CypherQueries.GetDependenciesFromListV2(depth)
 
+    logger.info("starting to compute dependencies with query: " + query_)
+    logger.info("database url: " + boltUrl_)
     // Use of map partitions to create one connection per partition in workers See:
     //  https://spark.apache.org/docs/latest/streaming-programming-guide.html#design-patterns-for-using-foreachrdd
 
-    val sessionsWithTimeRdd = sessions.rdd /*.repartition(1)*/ .mapPartitionsWithIndex {
+    val sessionsWithTimeRdd = sessions.rdd.repartition(1).mapPartitionsWithIndex {
       case (partIndex, iter) =>
 
         //ToDo: instead of instantiating a new driver for each partition, consider a  connection pool
@@ -154,7 +155,6 @@ class Neo4JDependencyComputerProfiler(
 
         val neo4jSession = driver.session
 
-        var rowNo: Long = 0L
         //using toList to force eager computation of the map. Otherwise the connection is closed before the map is computed
         //ToDo: evaluate better ways of forcing eager computation (for ex: closing the connection inside the map if(iter.isempty))
         // https://stackoverflow.com/questions/36545579/spark-how-to-use-mappartition-and-create-close-connection-per-partition/36545821#36545821
@@ -167,7 +167,7 @@ class Neo4JDependencyComputerProfiler(
             var resultRow: Row = row
             val gavList = row.getAs[Seq[String]]("gavs").asJava
 
-            getDependencies(neo4jSession, gavList, depth, s"$partIndex-$index") match {
+            getDependencies(neo4jSession, query_, gavList, s"$partIndex-$index") match {
               case Right(result) => {
                 // add dependencies, elapsed computing in milliseconds and errorDeps = null
                 resultRow = Row.fromSeq(resultRow.toSeq ++ Array(result.dependencies, result.elapsedMillis, null))

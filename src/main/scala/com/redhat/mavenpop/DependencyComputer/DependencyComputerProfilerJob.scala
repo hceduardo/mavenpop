@@ -45,11 +45,10 @@ object DependencyComputerProfilerJob {
     val depths = conf.profilerDepthStart to conf.profilerDepthEnd by conf.profilerDepthStep
     val (neoUrl, neoUser, neoPass) = (conf.neoBoltUrl, conf.neoUsername, conf.neoPassword)
 
+    val sampleSessions = getOrCreateSampleSessions(spark, conf, sampleSessionsPath, sessionsWithSize)
+    sampleSessions.persist()
+
     for (depth <- depths) {
-
-      val sampleSessions = getOrCreateSampleSessions(spark, conf, sampleSessionsPath, sessionsWithSize)
-
-      sampleSessions.persist()
 
       val outPath = s"$outPrefix-$depth.parquet"
       val profiler = new Neo4JDependencyComputerProfiler(neoUrl, neoUser, neoPass, depth)
@@ -120,6 +119,8 @@ object DependencyComputerProfilerJob {
     assert(maxSessionSize >= minSessionSize)
 
     var sessionSize = minSessionSize
+
+    // Initial projection to get the schema in "samples" DF
     var samples = sessionsWithSize.filter(s"gavsSize == $sessionSize").limit(samplesPerSize)
     sessionSize += sessionSizeStep
 

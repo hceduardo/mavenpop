@@ -34,7 +34,7 @@ class NeoDataParser {
   def addDirectDep(gav: String, dependencies: Set[String]): Unit = {
 
     // Do not add UNKNOWN_DEPS or NO_DEPS nodes
-    if(dependencies.size == 1 && excludedDeps.contains(dependencies.toSeq(0))){
+    if (dependencies.size == 1 && excludedDeps.contains(dependencies.toSeq(0))) {
       return
     }
 
@@ -51,7 +51,6 @@ class NeoDataParser {
       case true => dependencyMap(gav) ++= _deps
     }
   }
-
 
   private def parseDependencyMap(source: Source): Unit = {
 

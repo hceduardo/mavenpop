@@ -38,7 +38,7 @@ function configure_dbms(){
 function wait_neo_server_online(){
     local end="$((SECONDS+120))"
     while true; do
-        nc -z -w 2 localhost 7687 && break
+        nc -z -w 2 localhost 17687 && break
         [[ "${SECONDS}" -ge "${end}" ]] && exit 1
         sleep 1
     done

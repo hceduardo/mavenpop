@@ -14,19 +14,20 @@ object CypherQueries {
         """WITH $gavList as gavIds
           |MATCH p = (topLevel)-[*1..]->(dependency)
           |WHERE topLevel.id in gavIds AND dependency.id in gavIds AND
-          |ANY (gavId in gavIds WHERE (topLevel:GAV)-[:DEPENDS_ON*1..]->(dependency:GAV{id:gavId}))
+          |ANY (gavId in gavIds WHERE (topLevel:GAV)-[:D_DEPENDS_ON*1..]->(dependency:GAV{id:gavId}))
           |RETURN DISTINCT dependency.id AS dependencyId""".stripMargin
       }
       case 1 => {
         """WITH $gavList as gavIds
-          |MATCH p = (topLevel:GAV)-[:DEPENDS_ON]->(dependency:GAV)
-          |WHERE topLevel.id in gavIds AND dependency.id in gavIds
+          |MATCH (dependency:GAV)
+          |WHERE dependency.id in gavIds AND
+          |ANY(gavId in gavIds WHERE (:GAV{id:gavId})-[:T_DEPENDS_ON]->(dependency))
           |RETURN DISTINCT dependency.id AS dependencyId""".stripMargin
       }
       case _ => {
         "WITH $gavList as gavIds " + s"""MATCH (dependency:GAV)
           |WHERE dependency.id in gavIds AND
-          |ANY (gavId in gavIds WHERE (:GAV{id:gavId})-[:DEPENDS_ON*1..$depth]->(dependency))
+          |ANY (gavId in gavIds WHERE (:GAV{id:gavId})-[:D_DEPENDS_ON*1..$depth]->(dependency))
           |RETURN DISTINCT dependency.id AS dependencyId
         """.stripMargin
       }
