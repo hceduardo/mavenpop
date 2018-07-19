@@ -4,11 +4,21 @@ import java.net.ServerSocket
 
 object TestHelpers {
 
-  def generateMismatchMessage[T](a1: Array[T], a2: Array[T]): String = {
-    if (a1.size != a2.size) {
-      s"different sizes: ${a1.size} != ${a2.size}"
+  def generateMismatchMessage[T](actual: Array[T], expected: Array[T]): String = {
+
+    val stringBuilder: StringBuilder = StringBuilder.newBuilder
+
+    if (actual.size != expected.size) {
+
+      actual.toSet -- expected.toSet
+
+      stringBuilder ++= s"different sizes: actual size = ${actual.size} , expected size = ${expected.size} \n"
+      stringBuilder ++= "actual contents: \n"
+      stringBuilder ++= actual.mkString(",") + "\n"
+      stringBuilder ++= "expected contents: \n"
+      stringBuilder ++= expected.mkString(",") + "\n"
     } else {
-      "different elements: \n" + a1.zip(a2).flatMap {
+      stringBuilder ++= "different elements: \n" + actual.zip(expected).flatMap {
         case (r1, r2) =>
           if (!r1.equals(r2)) {
             Some(s"$r1 | $r2")
@@ -17,6 +27,7 @@ object TestHelpers {
           }
       }.mkString("\n")
     }
+    stringBuilder.toString()
   }
 
   def getFreePort: Int = {

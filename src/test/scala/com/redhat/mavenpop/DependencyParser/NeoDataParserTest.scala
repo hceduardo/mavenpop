@@ -1,6 +1,6 @@
 package com.redhat.mavenpop.DependencyParser
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.{ PrintWriter, StringWriter }
 
 import com.redhat.mavenpop.MavenPopConfig
 import com.redhat.mavenpop.test.TestHelpers
@@ -50,9 +50,34 @@ mavenpop:test:dep1
 mavenpop:test:dep2
 mavenpop:test:dep3
 mavenpop:test:top2
-mavenpop:test:dep4
-mavenpop:test:top3
-mavenpop:test:top4"""
+mavenpop:test:dep4"""
+
+    val expectedRelStr =
+      """mavenpop:test:top1,mavenpop:test:dep1
+mavenpop:test:top1,mavenpop:test:dep2
+mavenpop:test:top1,mavenpop:test:dep3
+mavenpop:test:top2,mavenpop:test:dep4
+mavenpop:test:top2,mavenpop:test:dep1
+mavenpop:test:top2,mavenpop:test:dep3"""
+
+    assertParseDependencies(sourceStr, expectedNodeStr, expectedRelStr, false)
+  }
+
+  "parseDependencies" should "not write nodes with only UKNOWN_DEPS or NO_DEPS as dependencies" in {
+
+    val sourceStr =
+      """1 p mavenpop:test:top1 mavenpop:test:dep1,mavenpop:test:dep2,mavenpop:test:dep3
+1 p mavenpop:test:top2 mavenpop:test:dep4,mavenpop:test:dep1,mavenpop:test:dep3
+1 p mavenpop:test:top3 UNKNOWN_DEPS
+1 p mavenpop:test:top4 NO_DEPS"""
+
+    val expectedNodeStr =
+      """mavenpop:test:top1
+mavenpop:test:dep1
+mavenpop:test:dep2
+mavenpop:test:dep3
+mavenpop:test:top2
+mavenpop:test:dep4"""
 
     val expectedRelStr =
       """mavenpop:test:top1,mavenpop:test:dep1
@@ -72,7 +97,7 @@ mavenpop:test:top2,mavenpop:test:dep3"""
 1 p mavenpop:test:top2 mavenpop:test:dep4,mavenpop:test:dep1,mavenpop:test:dep3
 1 p mavenpop:test:top3 UNKNOWN_DEPS
 1 p mavenpop:test:top4 NO_DEPS
-1 p mavenpop:test:top1 mavenpop:test:dep6"""
+1 p mavenpop:test:top3 mavenpop:test:dep6"""
 
     val expectedNodeStr =
       """mavenpop:test:top1
@@ -82,8 +107,7 @@ mavenpop:test:dep3
 mavenpop:test:top2
 mavenpop:test:dep4
 mavenpop:test:dep6
-mavenpop:test:top3
-mavenpop:test:top4"""
+mavenpop:test:top3"""
 
     val expectedRelStr =
       """mavenpop:test:top1,mavenpop:test:dep1
@@ -92,7 +116,7 @@ mavenpop:test:top1,mavenpop:test:dep3
 mavenpop:test:top2,mavenpop:test:dep4
 mavenpop:test:top2,mavenpop:test:dep1
 mavenpop:test:top2,mavenpop:test:dep3
-mavenpop:test:top1,mavenpop:test:dep6"""
+mavenpop:test:top3,mavenpop:test:dep6"""
 
     assertParseDependencies(sourceStr, expectedNodeStr, expectedRelStr, false)
   }
@@ -123,9 +147,8 @@ mavenpop:test:top1,mavenpop:test:dep111"""
     assertParseDependencies(sourceStr, expectedNodeStr, expectedRelStr, true)
   }
 
-
   private def assertParseDependencies(sourceStr: String, expectedNodeStr: String, expectedRelStr: String,
-                                      writeTransitiveAsDirect: Boolean) = {
+    writeTransitiveAsDirect: Boolean) = {
     source = Source.fromString(
       sourceStr.stripMargin)
 
@@ -148,10 +171,10 @@ mavenpop:test:top1,mavenpop:test:dep111"""
     assertArrayEqual(outDepArr, expectedDepArr)
   }
 
-  private def assertArrayEqual[T <: Comparable[T]](a1: Array[T], a2: Array[T]): Unit = {
-    val sameElements = a1.sorted.sameElements(a2.sorted)
+  private def assertArrayEqual[T <: Comparable[T]](actual: Array[T], expected: Array[T]): Unit = {
+    val sameElements = actual.sorted.sameElements(expected.sorted)
 
-    if (!sameElements) print(TestHelpers.generateMismatchMessage(a1, a2))
+    if (!sameElements) print(TestHelpers.generateMismatchMessage(actual, expected))
 
     sameElements should be(true)
   }

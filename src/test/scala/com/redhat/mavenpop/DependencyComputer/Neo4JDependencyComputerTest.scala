@@ -132,7 +132,8 @@ class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndA
     val inputSession = createSession(inputStr)
     val expectedDf = createSessionWithDeps(inputStr, expectedStr)
 
-    val sessionAnalyser = new Neo4JDependencyComputer(boltUrl, "any", "any", 1, false, true)
+    // This test only database with direct dependencies
+    val sessionAnalyser = new Neo4JDependencyComputer(boltUrl, "any", "any", 10, false, true)
     val actualDf = sessionAnalyser.computeDependencies(spark, inputSession)
 
     areDataFramesEqual(actualDf, expectedDf) should be(true)
@@ -185,13 +186,15 @@ class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndA
       StructField("startTime", LongType, true),
       StructField("endTime", LongType, true),
       StructField("gavs", ArrayType(StringType, true), true),
-      StructField("dependencies", ArrayType(StringType, true), true)))
+      StructField("dependencies", ArrayType(StringType, true), true),
+      StructField("execMillis", LongType, true),
+      StructField("errorDeps", StringType, true)))
 
     val dependenciesArr = if (dependenciesStr == "") new Array[String](0)
     else dependenciesStr.split(",")
 
     val sessionsWithDepData = Arrays.asList(
-      Row(1, 0L, startTime, endTime, sessionStr.split(","), dependenciesArr))
+      Row(1, 0L, startTime, endTime, sessionStr.split(","), dependenciesArr, -1L, null))
 
     val sessionsWithDep = spark.createDataFrame(sessionsWithDepData, sessionsWithDepSchema)
 

@@ -2,8 +2,6 @@ package com.redhat.mavenpop.DependencyComputer
 
 import com.redhat.mavenpop.MavenPopConfig
 
-
-
 object CypherQueries {
 
   private val conf: MavenPopConfig = new MavenPopConfig()

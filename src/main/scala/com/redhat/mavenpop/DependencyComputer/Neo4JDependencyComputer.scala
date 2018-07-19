@@ -1,16 +1,16 @@
 package com.redhat.mavenpop.DependencyComputer
 import org.apache.log4j.LogManager
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{ DataFrame, Row, SparkSession }
 import org.neo4j.driver.v1.exceptions.ClientException
-import org.neo4j.driver.v1.{AuthTokens, Config, GraphDatabase, Session}
+import org.neo4j.driver.v1.{ AuthTokens, Config, GraphDatabase, Session }
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.JavaConverters._
 import com.redhat.mavenpop.DependencyComputer.Neo4JDependencyComputer.TransactionFailureReason
 import com.redhat.mavenpop.DependencyComputer.Neo4JDependencyComputer.TransactionFailureReason.TransactionFailureReason
 
-object Neo4JDependencyComputer{
+object Neo4JDependencyComputer {
 
   object TransactionFailureReason extends Enumeration {
     type TransactionFailureReason = Value
@@ -19,36 +19,36 @@ object Neo4JDependencyComputer{
 }
 
 class Neo4JDependencyComputer(
-                               boltUrl: String,
-                               username: String,
-                               password: String,
-                               depth: Int,
-                               withInstrumentation: Boolean,
-                               testConfig: Boolean)
+  boltUrl: String,
+  username: String,
+  password: String,
+  depth: Int,
+  withInstrumentation: Boolean,
+  testConfig: Boolean)
   extends DependencyComputer {
 
   def this(
-            boltUrl: String,
-            username: String,
-            password: String,
-            depth: Int,
-            withInstrumentation: Boolean ) {
+    boltUrl: String,
+    username: String,
+    password: String,
+    depth: Int,
+    withInstrumentation: Boolean) {
 
     this(boltUrl, username, password, depth, withInstrumentation, false)
   }
 
   def this(
-            boltUrl: String,
-            username: String,
-            password: String,
-            depth: Int ) {
+    boltUrl: String,
+    username: String,
+    password: String,
+    depth: Int) {
 
     this(boltUrl, username, password, depth, false, false)
   }
 
   @transient private lazy val logger = LogManager.getLogger(getClass.getName)
 
-  /***
+/***
     * Read gavs list of each session and computes which of them are dependencies of other gavs in the list
     * Adds the dependencies list as a new "dependencies" column and returns that new dataframe
     *
@@ -150,8 +150,8 @@ class Neo4JDependencyComputer(
 
     val newSchema = StructType(sessions.schema.fields ++ Array[StructField](
       StructField("dependencies", ArrayType(StringType, true), true), StructField("execMillis", LongType, true), StructField("errorDeps", StringType, true)
-      //      , StructField("traversalWork", IntegerType, true)
-      //      , StructField("errorTrav", StringType, true)
+    //      , StructField("traversalWork", IntegerType, true)
+    //      , StructField("errorTrav", StringType, true)
     ))
 
     val sessionsWithTime = spark.createDataFrame(sessionsWithTimeRdd, newSchema)
@@ -184,7 +184,7 @@ class Neo4JDependencyComputer(
 
   case class ProfilerResult(elapsedMillis: Long, dependencies: ArrayBuffer[String])
 
-  /***
+/***
     * Gets the dependencies from database and return the dependencies or failure reason
     * @param neo4jSession
     * @param query
@@ -195,8 +195,7 @@ class Neo4JDependencyComputer(
     *         if #withInstrumentation field is false, it does not calucalte the time returns -1 in the elapsed time field
     */
   private def getDependencies(neo4jSession: Session, query: String,
-                              gavList: java.util.List[String], debugIndex: String):
-  Either[TransactionFailureReason, ProfilerResult] = {
+    gavList: java.util.List[String], debugIndex: String): Either[TransactionFailureReason, ProfilerResult] = {
 
     //Using Either instead of Try/Success/Failure because the ClientError exception is not catched by scala.util.Try()
     val parameters = Map[String, Object]("gavList" -> gavList).asJava
@@ -218,7 +217,7 @@ class Neo4JDependencyComputer(
 
     try {
 
-      if(withInstrumentation) {
+      if (withInstrumentation) {
         val t1 = System.nanoTime()
         val dependencies = getDependenciesFromDB()
         val elapsedMillis = (System.nanoTime() - t1) / 1000000

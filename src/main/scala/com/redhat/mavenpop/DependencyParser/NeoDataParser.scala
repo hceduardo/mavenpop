@@ -43,13 +43,15 @@ class NeoDataParser {
       buildTransitiveDependencyMap()
 
       logger.info("Writing output files with transitive dependencies...")
-      writeDependencyMap(transitiveDependencyMap.iterator,
+      writeDependencyMap(
+        transitiveDependencyMap.iterator,
         conf.gavLabel, conf.transitiveDepLabel, outGav, outDep)
 
     } else {
 
       logger.info("Writing output files with direct dependencies...")
-      writeDependencyMap(dependencyMap.iterator,
+      writeDependencyMap(
+        dependencyMap.iterator,
         conf.gavLabel, conf.directDepLabel, outGav, outDep)
 
     }
@@ -58,7 +60,6 @@ class NeoDataParser {
 
   def parseDependencies(source: Source, outGav: PrintWriter, outDep: PrintWriter): Unit =
     parseDependencies(source, outGav, outDep, false)
-
 
   private def addDirectDep(gav: String, dependencies: Set[String]): Unit = {
 
@@ -98,10 +99,10 @@ class NeoDataParser {
     })
   }
 
-  private def writeDependencyMap( mapEntries: Iterator[(String, mutable.Set[String])],
-                                  nodeLabel: String, relationshipLabel: String,
-                                  outGav: PrintWriter, outDep: PrintWriter
-                                  ) = {
+  private def writeDependencyMap(
+    mapEntries: Iterator[(String, mutable.Set[String])],
+    nodeLabel: String, relationshipLabel: String,
+    outGav: PrintWriter, outDep: PrintWriter) = {
     assert(!dependencyMap.isEmpty)
 
     outGav.println(NeoDataParser.HEADER_NODE_GAV)
