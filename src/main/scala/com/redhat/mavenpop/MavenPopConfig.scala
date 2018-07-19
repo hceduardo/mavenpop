@@ -17,6 +17,7 @@ class MavenPopConfig() {
 
   val sparkMasterUrl = config.getString("mavenpop.spark.masterUrl")
   val sparkEnableEventLog = config.getBoolean("mavenpop.spark.enableEventLog")
+
   val repologsPath = config.getString("mavenpop.path.repologs")
   val dependenciesPath = config.getString("mavenpop.path.dependencies")
   val gavLogsPath = config.getString("mavenpop.path.gavlogs")
@@ -25,7 +26,8 @@ class MavenPopConfig() {
   val sessionCountPath = config.getString("mavenpop.path.sessionCount")
   val profilerSamplePrefix = config.getString("mavenpop.path.sampleSessionsPrefix")
   val sessionsBenchmarksPrefix = config.getString("mavenpop.path.sessionsBenchmarksPrefix")
-  val parserWriteTransitive = config.getBoolean("mavenpop.parser.writeTransitive")
+
+  val reportDir = config.getString("mavenpop.path.reportDir")
 
   val sessionMaxIdleMillis = config.getLong("mavenpop.sessions.maxIdleMillis")
   val neoBoltUrl = config.getString("mavenpop.neo4j.boltUrl")
@@ -42,6 +44,7 @@ class MavenPopConfig() {
   val profilerUseCacheSamples = config.getBoolean("mavenpop.dependencyComputerProfiler.useCacheSamples")
   val profilerCacheSamples = config.getBoolean("mavenpop.dependencyComputerProfiler.cacheSamples")
 
+  val parserWriteTransitive = config.getBoolean("mavenpop.parser.writeTransitive")
   val dependencyComputerDepth = config.getInt("mavenpop.dependencyComputer.depth")
   val gavLabel = config.getString("mavenpop.parser.label.gav")
   val directDepLabel = config.getString("mavenpop.parser.label.directDependency")

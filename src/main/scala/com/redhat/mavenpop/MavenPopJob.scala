@@ -12,7 +12,7 @@ trait MavenPopJob {
 
   private val jobName = this.getClass.getSimpleName
 
-  protected val logger: Logger = LogManager.getLogger(jobName)
+  protected val logger: Logger = LogManager.getLogger(this.getClass.getName)
 
   logger.info(s"starting $jobName")
 
