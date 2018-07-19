@@ -2,30 +2,13 @@ package com.redhat.mavenpop.DependencyComputer
 
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
-import com.redhat.mavenpop.MavenPopConfig
-import org.apache.log4j.LogManager
-import org.apache.spark.sql.{ DataFrame, SaveMode, SparkSession }
+import com.redhat.mavenpop.{MavenPopConfig, MavenPopJob}
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 
-object DependencyComputerProfilerJob {
-
-  private val logger = LogManager.getLogger(getClass.getName)
+object DependencyComputerProfilerJob extends MavenPopJob {
 
   def main(args: Array[String]) {
-
-    // Load resources/reference.conf by default
-    // Allows override with -Dconfig.file=path/to/config-file
-    val conf: MavenPopConfig = new MavenPopConfig()
-
-    logger.info(s"starting ${this.getClass.getSimpleName}")
-
-    val sparkMaster = if (args.isEmpty) "local[*]" else args(0)
-
-    val spark = SparkSession.builder.appName("DependencyComputerProfiler")
-      .config("spark.master", sparkMaster)
-      .config("spark.eventLog.enabled", true)
-      .getOrCreate()
-
     import spark.implicits._
 
     val (samplePrefix, resultPrefix, minSess, maxSess, stepSess, sampleCount) =
@@ -64,7 +47,6 @@ object DependencyComputerProfilerJob {
 
     }
 
-    spark.stop()
     logger.info(s"finishing ${this.getClass.getSimpleName}")
   }
 

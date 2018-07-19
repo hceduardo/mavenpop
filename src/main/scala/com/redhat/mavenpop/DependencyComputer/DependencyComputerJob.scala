@@ -1,24 +1,11 @@
 package com.redhat.mavenpop.DependencyComputer
 
-import com.redhat.mavenpop.MavenPopConfig
-import org.apache.spark.sql.{ SaveMode, SparkSession }
+import com.redhat.mavenpop.MavenPopJob
+import org.apache.spark.sql.SaveMode
 
-object DependencyComputerJob {
+object DependencyComputerJob extends MavenPopJob {
 
   def main(args: Array[String]) {
-
-    //Todo:
-
-    // Load resources/reference.conf by default
-    // Allows override with -Dconfig.file=path/to/config-file
-    val conf: MavenPopConfig = new MavenPopConfig()
-
-    val sparkMaster = if (args.isEmpty) "local[*]" else args(0)
-
-    val spark = SparkSession.builder.appName("DependencyComputer")
-      .config("spark.master", sparkMaster)
-      .config("spark.eventLog.enabled", true)
-      .getOrCreate()
 
     val sessions = spark.read.parquet(conf.sessionsPath)
 

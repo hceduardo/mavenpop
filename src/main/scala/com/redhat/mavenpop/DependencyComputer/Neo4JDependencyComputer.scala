@@ -149,7 +149,9 @@ class Neo4JDependencyComputer(
     }
 
     val newSchema = StructType(sessions.schema.fields ++ Array[StructField](
-      StructField("dependencies", ArrayType(StringType, true), true), StructField("execMillis", LongType, true), StructField("errorDeps", StringType, true)
+      StructField("dependencies", ArrayType(StringType, true), true),
+      StructField("execMillis", LongType, true),
+      StructField("errorDeps", StringType, true)
     //      , StructField("traversalWork", IntegerType, true)
     //      , StructField("errorTrav", StringType, true)
     ))

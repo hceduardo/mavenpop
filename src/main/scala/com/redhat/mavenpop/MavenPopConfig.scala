@@ -15,6 +15,8 @@ class MavenPopConfig() {
   // Validate config under mavenpop path
   config.checkValid(config, "mavenpop")
 
+  val sparkMasterUrl = config.getString("mavenpop.spark.masterUrl")
+  val sparkEnableEventLog = config.getBoolean("mavenpop.spark.enableEventLog")
   val repologsPath = config.getString("mavenpop.path.repologs")
   val dependenciesPath = config.getString("mavenpop.path.dependencies")
   val gavLogsPath = config.getString("mavenpop.path.gavlogs")
