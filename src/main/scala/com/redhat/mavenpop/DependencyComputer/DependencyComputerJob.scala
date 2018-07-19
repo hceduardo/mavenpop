@@ -23,7 +23,7 @@ object DependencyComputerJob {
     val sessions = spark.read.parquet(conf.sessionsPath)
 
     val dependencyComputer: DependencyComputer = new Neo4JDependencyComputer(
-      conf.neoBoltUrl, conf.neoUsername, conf.neoPassword, 1)
+      conf.neoBoltUrl, conf.neoUsername, conf.neoPassword, conf.dependencyComputerDepth)
 
     val sessionsWithDependencies = dependencyComputer.computeDependencies(spark, sessions)
 

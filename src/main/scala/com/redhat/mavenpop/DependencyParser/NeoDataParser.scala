@@ -3,6 +3,7 @@ package com.redhat.mavenpop.DependencyParser
 import java.io.PrintWriter
 
 import com.redhat.mavenpop.GavResolver.DependencyRecord
+import com.redhat.mavenpop.MavenPopConfig
 
 import scala.io.Source
 import org.apache.log4j.LogManager
@@ -11,8 +12,6 @@ import scala.collection.mutable
 
 object NeoDataParser {
   val DELIMITER = "|"
-  val LABEL_NODE_GAV = "GAV"
-  val LABEL_REL_DEP = "DEPENDS_ON"
   val HEADER_NODE_GAV = s"id:ID$DELIMITER:LABEL"
   val HEADER_REL_DEP = s":START_ID$DELIMITER:END_ID$DELIMITER:TYPE"
 }
@@ -31,7 +30,37 @@ class NeoDataParser {
 
   private val logger = LogManager.getLogger(getClass.getName)
 
-  def addDirectDep(gav: String, dependencies: Set[String]): Unit = {
+  private val conf: MavenPopConfig = new MavenPopConfig()
+
+  def parseDependencies(source: Source, outGav: PrintWriter, outDep: PrintWriter, writeTransitiveAsDirect: Boolean): Unit = {
+
+    logger.info("Parsing input file...")
+    parseDependencyMap(source) //populate dependencyMap
+
+    if (writeTransitiveAsDirect) {
+
+      logger.info("generating transitive dependency map")
+      buildTransitiveDependencyMap()
+
+      logger.info("Writing output files with transitive dependencies...")
+      writeDependencyMap(transitiveDependencyMap.iterator,
+        conf.gavLabel, conf.transitiveDepLabel, outGav, outDep)
+
+    } else {
+
+      logger.info("Writing output files with direct dependencies...")
+      writeDependencyMap(dependencyMap.iterator,
+        conf.gavLabel, conf.directDepLabel, outGav, outDep)
+
+    }
+
+  }
+
+  def parseDependencies(source: Source, outGav: PrintWriter, outDep: PrintWriter): Unit =
+    parseDependencies(source, outGav, outDep, false)
+
+
+  private def addDirectDep(gav: String, dependencies: Set[String]): Unit = {
 
     // Do not add UNKNOWN_DEPS or NO_DEPS nodes
     if (dependencies.size == 1 && excludedDeps.contains(dependencies.toSeq(0))) {
@@ -69,8 +98,10 @@ class NeoDataParser {
     })
   }
 
-  private def writeDependencyMap(outGav: PrintWriter, outDep: PrintWriter,
-    mapEntries: Iterator[(String, mutable.Set[String])]) = {
+  private def writeDependencyMap( mapEntries: Iterator[(String, mutable.Set[String])],
+                                  nodeLabel: String, relationshipLabel: String,
+                                  outGav: PrintWriter, outDep: PrintWriter
+                                  ) = {
     assert(!dependencyMap.isEmpty)
 
     outGav.println(NeoDataParser.HEADER_NODE_GAV)
@@ -79,11 +110,11 @@ class NeoDataParser {
     mapEntries.toSeq.sortBy(n => n._1).foreach {
       case (gav: String, dependencies: mutable.Set[String]) =>
 
-        outGav.println(s"${gav}${NeoDataParser.DELIMITER}${NeoDataParser.LABEL_NODE_GAV}")
+        outGav.println(s"${gav}${NeoDataParser.DELIMITER}${nodeLabel}")
         _gavCount += 1
 
         dependencies.foreach { dep =>
-          outDep.println(s"${gav}${NeoDataParser.DELIMITER}${dep}${NeoDataParser.DELIMITER}${NeoDataParser.LABEL_REL_DEP}")
+          outDep.println(s"${gav}${NeoDataParser.DELIMITER}${dep}${NeoDataParser.DELIMITER}${relationshipLabel}")
           _depCount += 1
         }
 
@@ -123,26 +154,5 @@ class NeoDataParser {
         buildTransitives(gav, mutable.Set.empty[String])
     }
   }
-
-  def parseDependencies(source: Source, outGav: PrintWriter, outDep: PrintWriter, writeTransitiveAsDirect: Boolean): Unit = {
-    logger.info("Parsing input file...")
-    parseDependencyMap(source) //populate dependencyMap
-
-    if (!writeTransitiveAsDirect) {
-      logger.info("Writing output files...")
-      writeDependencyMap(outGav, outDep, dependencyMap.iterator)
-      return
-    }
-
-    logger.info("generating transitive dependency map")
-    buildTransitiveDependencyMap()
-
-    logger.info("Writing output files...")
-    writeDependencyMap(outGav, outDep, transitiveDependencyMap.iterator)
-
-  }
-
-  def parseDependencies(source: Source, outGav: PrintWriter, outDep: PrintWriter): Unit =
-    parseDependencies(source, outGav, outDep, false)
 
 }

@@ -2,32 +2,34 @@ package com.redhat.mavenpop.DependencyComputer
 
 import com.redhat.mavenpop.MavenPopConfig
 
+
+
 object CypherQueries {
 
-  private val _conf: MavenPopConfig = new MavenPopConfig()
+  private val conf: MavenPopConfig = new MavenPopConfig()
+  private val (gavLabel, directDepLabel, transitiveDepLabel) =
+    (conf.gavLabel, conf.directDepLabel, conf.transitiveDepLabel)
 
   def GetDependenciesFromListV2(depth: Int): String = {
     assert(depth >= 0)
 
     depth match {
       case 0 => {
-        """WITH $gavList as gavIds
-          |MATCH p = (topLevel)-[*1..]->(dependency)
+        "WITH $gavList as gavIds " + s"""MATCH p = (topLevel)-[*1..]->(dependency)
           |WHERE topLevel.id in gavIds AND dependency.id in gavIds AND
           |ANY (gavId in gavIds WHERE (topLevel:GAV)-[:D_DEPENDS_ON*1..]->(dependency:GAV{id:gavId}))
           |RETURN DISTINCT dependency.id AS dependencyId""".stripMargin
       }
       case 1 => {
-        """WITH $gavList as gavIds
-          |MATCH (dependency:GAV)
+        "WITH $gavList as gavIds " + s"""MATCH (dependency:$gavLabel)
           |WHERE dependency.id in gavIds AND
-          |ANY(gavId in gavIds WHERE (:GAV{id:gavId})-[:T_DEPENDS_ON]->(dependency))
+          |ANY(gavId in gavIds WHERE (:$gavLabel{id:gavId})-[:$transitiveDepLabel]->(dependency))
           |RETURN DISTINCT dependency.id AS dependencyId""".stripMargin
       }
       case _ => {
-        "WITH $gavList as gavIds " + s"""MATCH (dependency:GAV)
+        "WITH $gavList as gavIds " + s"""MATCH (dependency:$gavLabel)
           |WHERE dependency.id in gavIds AND
-          |ANY (gavId in gavIds WHERE (:GAV{id:gavId})-[:D_DEPENDS_ON*1..$depth]->(dependency))
+          |ANY (gavId in gavIds WHERE (:$gavLabel{id:gavId})-[:$directDepLabel*1..$depth]->(dependency))
           |RETURN DISTINCT dependency.id AS dependencyId
         """.stripMargin
       }

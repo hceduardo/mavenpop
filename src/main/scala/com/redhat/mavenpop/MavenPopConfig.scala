@@ -40,6 +40,11 @@ class MavenPopConfig() {
   val profilerUseCacheSamples = config.getBoolean("mavenpop.dependencyComputerProfiler.useCacheSamples")
   val profilerCacheSamples = config.getBoolean("mavenpop.dependencyComputerProfiler.cacheSamples")
 
+  val dependencyComputerDepth = config.getInt("mavenpop.dependencyComputer.depth")
+  val gavLabel = config.getString("mavenpop.parser.label.gav")
+  val directDepLabel = config.getString("mavenpop.parser.label.directDependency")
+  val transitiveDepLabel = config.getString("mavenpop.parser.label.transitiveDependency")
+
   override def toString(): String = {
     val s: StringBuilder = new StringBuilder()
 

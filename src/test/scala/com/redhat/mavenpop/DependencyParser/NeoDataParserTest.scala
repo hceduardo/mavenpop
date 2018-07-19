@@ -1,7 +1,8 @@
 package com.redhat.mavenpop.DependencyParser
 
-import java.io.{ PrintWriter, StringWriter }
+import java.io.{PrintWriter, StringWriter}
 
+import com.redhat.mavenpop.MavenPopConfig
 import com.redhat.mavenpop.test.TestHelpers
 
 import scala.io.Source
@@ -14,6 +15,8 @@ class NeoDataParserTest extends FlatSpec with Matchers with BeforeAndAfterEach {
   private var source: Source = _
   private var outGav: PrintWriter = _
   private var outDep: PrintWriter = _
+
+  private val conf: MavenPopConfig = new MavenPopConfig()
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -126,12 +129,14 @@ mavenpop:test:top1,mavenpop:test:dep111"""
     source = Source.fromString(
       sourceStr.stripMargin)
 
+    val relLabel = if (writeTransitiveAsDirect) conf.transitiveDepLabel else conf.directDepLabel
+
     val expectedGavArr = NeoDataParser.HEADER_NODE_GAV +:
-      expectedNodeStr.stripMargin.split("\n").map(_ + NeoDataParser.DELIMITER + NeoDataParser.LABEL_NODE_GAV)
+      expectedNodeStr.stripMargin.split("\n").map(_ + NeoDataParser.DELIMITER + conf.gavLabel)
 
     val expectedDepArr = NeoDataParser.HEADER_REL_DEP +:
       expectedRelStr.stripMargin.replaceAll(",", NeoDataParser.DELIMITER).
-      split("\n").map(_ + NeoDataParser.DELIMITER + NeoDataParser.LABEL_REL_DEP)
+      split("\n").map(_ + NeoDataParser.DELIMITER + relLabel)
 
     val parser = new NeoDataParser()
     parser.parseDependencies(source, outGav, outDep, writeTransitiveAsDirect)
