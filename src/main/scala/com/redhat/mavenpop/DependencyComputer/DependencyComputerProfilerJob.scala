@@ -51,7 +51,7 @@ object DependencyComputerProfilerJob {
     for (depth <- depths) {
 
       val outPath = s"$outPrefix-$depth.parquet"
-      val profiler = new Neo4JDependencyComputerProfiler(neoUrl, neoUser, neoPass, depth)
+      val profiler = new Neo4JDependencyComputer(neoUrl, neoUser, neoPass, depth, true)
       val benchmarks = profiler.computeDependencies(spark, sampleSessions)
 
       logger.info(s"obtaining and writing benchmarks for depth $depth to $outPath")

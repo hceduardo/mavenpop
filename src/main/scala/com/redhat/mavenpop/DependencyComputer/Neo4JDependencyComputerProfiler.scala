@@ -140,11 +140,13 @@ class Neo4JDependencyComputerProfiler(
     // Use of map partitions to create one connection per partition in workers See:
     //  https://spark.apache.org/docs/latest/streaming-programming-guide.html#design-patterns-for-using-foreachrdd
 
-    val sessionsWithTimeRdd = sessions.rdd.repartition(1).mapPartitionsWithIndex {
+    // To test non concurrent calls to database:
+    // val sessionsWithTimeRdd = sessions.rdd.repartition(1).mapPartitionsWithIndex {
+
+    val sessionsWithTimeRdd = sessions.rdd.mapPartitionsWithIndex {
       case (partIndex, iter) =>
 
         //ToDo: instead of instantiating a new driver for each partition, consider a  connection pool
-        //      val driver = GraphDatabase.driver(boltUrl, AuthTokens.basic(username, password))
 
         val driver = if (testConfig_)
           GraphDatabase.driver(boltUrl_, AuthTokens.basic(username_, password_), Config.build().

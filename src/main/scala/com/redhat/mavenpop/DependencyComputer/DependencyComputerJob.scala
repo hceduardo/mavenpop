@@ -7,6 +7,8 @@ object DependencyComputerJob {
 
   def main(args: Array[String]) {
 
+    //Todo:
+
     // Load resources/reference.conf by default
     // Allows override with -Dconfig.file=path/to/config-file
     val conf: MavenPopConfig = new MavenPopConfig()
@@ -21,7 +23,7 @@ object DependencyComputerJob {
     val sessions = spark.read.parquet(conf.sessionsPath)
 
     val dependencyComputer: DependencyComputer = new Neo4JDependencyComputer(
-      conf.neoBoltUrl, conf.neoUsername, conf.neoPassword)
+      conf.neoBoltUrl, conf.neoUsername, conf.neoPassword, 1)
 
     val sessionsWithDependencies = dependencyComputer.computeDependencies(spark, sessions)
 

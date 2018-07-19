@@ -132,7 +132,7 @@ class Neo4JDependencyComputerTest extends FlatSpec with Matchers with BeforeAndA
     val inputSession = createSession(inputStr)
     val expectedDf = createSessionWithDeps(inputStr, expectedStr)
 
-    val sessionAnalyser = new Neo4JDependencyComputer(boltUrl, "any", "any", true)
+    val sessionAnalyser = new Neo4JDependencyComputer(boltUrl, "any", "any", 1, false, true)
     val actualDf = sessionAnalyser.computeDependencies(spark, inputSession)
 
     areDataFramesEqual(actualDf, expectedDf) should be(true)
