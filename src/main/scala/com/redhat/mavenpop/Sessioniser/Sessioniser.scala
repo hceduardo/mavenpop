@@ -28,7 +28,7 @@ object Sessioniser {
         max("timestamp").as("endTime"),
         collect_set("gav").as("gavs"))
 
-    sessions
+    sessions.orderBy("startTime").repartition($"startTime")
   }
 
 }

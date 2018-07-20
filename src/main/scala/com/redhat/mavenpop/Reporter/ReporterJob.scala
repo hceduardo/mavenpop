@@ -1,17 +1,21 @@
 package com.redhat.mavenpop.Reporter
 
 import com.redhat.mavenpop.MavenPopJob
-import org.apache.spark.sql.SaveMode
 
 object ReporterJob extends MavenPopJob {
 
   def main(args: Array[String]) {
 
-    val sessionsWithDependencies = spark.read.parquet(conf.sessionsWithDepsPath)
+    val enhancedSessions = getEnhancedSessions
 
-    Reporter.writeReport(spark,sessionsWithDependencies, conf.reportDir)
+    Reporter.writeReport(spark, enhancedSessions, conf.reportDir)
 
     spark.stop()
   }
 
+  private def getEnhancedSessions = {
+    spark.read.parquet(conf.enhancedSessionsPath).
+      filter(s"startTime >= ${conf.startTime}").
+      filter(s"startTime < ${conf.endTime}")
+  }
 }
