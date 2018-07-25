@@ -10,7 +10,7 @@ trait MavenPopJob {
   // Allows override with -Dconfig.file=path/to/config-file
   protected val conf: MavenPopConfig = new MavenPopConfig()
 
-  private val jobName = this.getClass.getSimpleName
+  protected val jobName = this.getClass.getSimpleName
 
   protected val logger: Logger = LogManager.getLogger(this.getClass.getName)
 

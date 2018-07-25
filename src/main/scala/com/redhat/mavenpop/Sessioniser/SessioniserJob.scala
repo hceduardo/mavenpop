@@ -11,6 +11,7 @@ object SessioniserJob extends MavenPopJob {
     val sessions = Sessioniser.createSessions(spark, gavLogs, conf.sessionMaxIdleMillis)
     sessions.write.mode(SaveMode.Overwrite).parquet(conf.sessionsPath)
 
+    logger.info(s"stopping $jobName")
     spark.stop()
   }
 

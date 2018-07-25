@@ -47,7 +47,8 @@ object DependencyComputerProfilerJob extends MavenPopJob {
 
     }
 
-    logger.info(s"finishing ${this.getClass.getSimpleName}")
+    logger.info(s"stopping $jobName")
+    spark.stop()
   }
 
   def getOrCreateSampleSessions(spark: SparkSession, conf: MavenPopConfig,

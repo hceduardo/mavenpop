@@ -10,6 +10,7 @@ object ReporterJob extends MavenPopJob {
 
     Reporter.writeReport(spark, enhancedSessions, conf.reportDir)
 
+    logger.info(s"stopping $jobName")
     spark.stop()
   }
 

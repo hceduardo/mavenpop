@@ -24,6 +24,7 @@ object DependencyComputerJob extends MavenPopJob {
     logger.info(s"writing sessions with dependencies to ${conf.enhancedSessionsPath}")
     enhancedSessions.write.mode(SaveMode.Overwrite).parquet(conf.enhancedSessionsPath)
 
+    logger.info(s"stopping $jobName")
     spark.stop()
   }
 
