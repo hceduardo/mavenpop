@@ -3,7 +3,7 @@ package com.redhat.mavenpop.GavResolver
 import com.redhat.mavenpop.MavenPopJob
 import org.apache.spark.sql.SaveMode
 
-object GavResolverJob extends MavenPopJob{
+object GavResolverJob extends MavenPopJob {
 
   def main(args: Array[String]) {
 

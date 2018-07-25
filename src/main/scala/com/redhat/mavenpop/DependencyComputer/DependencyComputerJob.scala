@@ -1,10 +1,10 @@
 package com.redhat.mavenpop.DependencyComputer
 
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.{ LocalDateTime, ZoneId, ZonedDateTime }
 import java.time.format.DateTimeFormatter
 
 import com.redhat.mavenpop.MavenPopJob
-import org.apache.spark.sql.{DataFrame, SaveMode}
+import org.apache.spark.sql.{ DataFrame, SaveMode }
 
 object DependencyComputerJob extends MavenPopJob {
 

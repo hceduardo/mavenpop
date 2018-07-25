@@ -1,7 +1,7 @@
 package com.redhat.mavenpop
 
 import com.redhat.mavenpop.DependencyComputer.DependencyComputerProfilerJob.logger
-import org.apache.log4j.{LogManager, Logger}
+import org.apache.log4j.{ LogManager, Logger }
 import org.apache.spark.sql.SparkSession
 
 trait MavenPopJob {
@@ -16,7 +16,7 @@ trait MavenPopJob {
 
   logger.info(s"starting $jobName")
 
-  /***
+/***
     * session should be stopped at the end of the implementing class main method with spark.stop()
     */
   protected val spark: SparkSession = SparkSession.builder.appName(jobName)

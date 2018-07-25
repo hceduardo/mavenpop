@@ -4,7 +4,7 @@ import com.redhat.mavenpop.MavenPopConfig
 import org.apache.log4j.LogManager
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.functions.udf
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.sql.{ DataFrame, SaveMode, SparkSession }
 
 object Reporter {
 
@@ -41,7 +41,6 @@ object Reporter {
       agg(countDistinct("clientId").as("clients")).
       orderBy(desc("clients"))
 
-
     val reportPrefix = reportDir + s"${conf.startTimeString}_${conf.endTimeString}_"
     val directPath = reportPrefix + "direct.csv"
     val indirectPath = reportPrefix + "indirect.csv"
@@ -52,6 +51,5 @@ object Reporter {
     indirectReport.write.mode(SaveMode.Overwrite).csv(indirectPath)
 
   }
-
 
 }

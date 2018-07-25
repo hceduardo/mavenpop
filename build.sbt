@@ -2,7 +2,7 @@
 lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
-      scalaHome       := Some(file("/opt/scala")),
+      scalaHome       := Some(file(sys.env.get("SCALA_HOME").getOrElse("/opt/scala"))),
       scalaVersion    := "2.11.8",
       organization    := "com.redhat.mavenpop"
     )),

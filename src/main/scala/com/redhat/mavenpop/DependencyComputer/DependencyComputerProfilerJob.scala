@@ -2,8 +2,8 @@ package com.redhat.mavenpop.DependencyComputer
 
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
-import com.redhat.mavenpop.{MavenPopConfig, MavenPopJob}
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import com.redhat.mavenpop.{ MavenPopConfig, MavenPopJob }
+import org.apache.spark.sql.{ DataFrame, SaveMode, SparkSession }
 import org.apache.spark.sql.functions._
 
 object DependencyComputerProfilerJob extends MavenPopJob {

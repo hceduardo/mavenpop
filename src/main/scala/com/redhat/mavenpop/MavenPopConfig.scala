@@ -3,14 +3,15 @@ package com.redhat.mavenpop
 import java.time._
 import java.time.format.DateTimeFormatter
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import com.redhat.mavenpop.MavenPopConfig.getEpochMillis
 
-object MavenPopConfig{
+object MavenPopConfig {
   val DATE_PATTERN = "yyyy-MM-dd'T'HH:mmX"
 
-  def getEpochMillis(zonedDateTime: String): Long ={
-    val zonedDT = ZonedDateTime.parse(zonedDateTime,
+  def getEpochMillis(zonedDateTime: String): Long = {
+    val zonedDT = ZonedDateTime.parse(
+      zonedDateTime,
       DateTimeFormatter.ofPattern(DATE_PATTERN))
 
     zonedDT.toEpochSecond * 1000L
@@ -36,10 +37,10 @@ class MavenPopConfig() {
   val startTimeString = config.getString("mavenpop.date.start")
   val endTimeString = config.getString("mavenpop.date.end")
 
-  /*** in epoch millis ***/
+/*** in epoch millis ***/
   val startTime = getEpochMillis(startTimeString)
 
-  /*** in epoch millis ***/
+/*** in epoch millis ***/
   val endTime = getEpochMillis(endTimeString)
 
   val repologsPath = config.getString("mavenpop.path.repologs")
