@@ -347,14 +347,14 @@ For the configuration specified in demo.conf, these would be the output:
 
 ```bash
 $ cd out/reports/ && ls
-2009-12-11T00:00Z_2010-02-10T00:00Z_direct.csv  
-2009-12-11T00:00Z_2010-02-10T00:00Z_indirect.csv
+2009-12-11T00:00Z_2010-02-10T00-00Z_direct.csv  
+2009-12-11T00:00Z_2010-02-10T00-00Z_indirect.csv
 ```
 
 Top 10 direct usages:
 
 ```bash
-$ cat 2009-12-11T00\:00Z_2010-02-10T00\:00Z_direct.csv/*.csv | head -10
+$ cat 2009-12-11T00-00Z_2010-02-10T00-00Z_direct.csv/*.csv | head -10
 org.slf4j:slf4j-parent:1.4.2,5
 commons-io:commons-io:1.4,4
 asm:asm-parent:3.0,4
@@ -369,7 +369,7 @@ org.apache.maven.reporting:maven-reporting-impl:2.0.4,3
 
 Top 10 indirect usages:
 ```bash
-$ cat 2009-12-11T00\:00Z_2010-02-10T00\:00Z_indirect.csv/*.csv | head -10
+$ cat 2009-12-11T00-00Z_2010-02-10T00-00Z_indirect.csv/*.csv | head -10
 org.hibernate:ejb3-persistence:1.0.2.GA,7
 dom4j:dom4j:1.6.1,6
 xml-apis:xml-apis:1.0.b2,6

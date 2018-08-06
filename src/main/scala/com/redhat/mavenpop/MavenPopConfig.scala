@@ -7,7 +7,7 @@ import com.typesafe.config.{ Config, ConfigFactory }
 import com.redhat.mavenpop.MavenPopConfig.getEpochMillis
 
 object MavenPopConfig {
-  val DATE_PATTERN = "yyyy-MM-dd'T'HH:mmX"
+  val DATE_PATTERN = "yyyy-MM-dd'T'HH-mmX"
 
   def getEpochMillis(zonedDateTime: String): Long = {
     val zonedDT = ZonedDateTime.parse(

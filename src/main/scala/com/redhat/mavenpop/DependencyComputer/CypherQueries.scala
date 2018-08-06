@@ -8,6 +8,30 @@ object CypherQueries {
   private val (gavLabel, directDepLabel, transitiveDepLabel) =
     (conf.gavLabel, conf.directDepLabel, conf.transitiveDepLabel)
 
+  def GetDependenciesFromListV3(depth: Int): String = {
+    assert(depth >= 0)
+
+    depth match {
+      case 0 => {
+        "WITH $gavList as gavIds " + s"""MATCH p = (topLevel:$gavLabel)-[:$directDepLabel*1..]->(dependency:$gavLabel)
+                                        |WHERE topLevel.id in gavIds AND dependency.id in gavIds AND
+                                        |ANY (gavId in gavIds WHERE (topLevel:$gavLabel)-[:$directDepLabel*1..]->(dependency:$gavLabel{id:gavId}))
+                                        |RETURN DISTINCT dependency.id AS dependencyId""".stripMargin
+      }
+      case 1 => {
+        "WITH $gavList as gavIds " + s"""MATCH (topLevel:$gavLabel)-[:$transitiveDepLabel]->(dependency:$gavLabel)
+                                        |WHERE topLevel.id in gavIds AND dependency.id in gavIds
+                                        |RETURN DISTINCT dependency.id AS dependencyId""".stripMargin
+      }
+      case _ => {
+        "WITH $gavList as gavIds " + s"""MATCH (dependency:$gavLabel)
+                                        |WHERE dependency.id in gavIds AND
+                                        |ANY (gavId in gavIds WHERE (:$gavLabel{id:gavId})-[:$directDepLabel*1..$depth]->(dependency))
+                                        |RETURN DISTINCT dependency.id AS dependencyId""".stripMargin
+      }
+    }
+  }
+
   def GetDependenciesFromListV2(depth: Int): String = {
     assert(depth >= 0)
 
@@ -40,9 +64,9 @@ object CypherQueries {
     depth match {
       case 0 => {
         """WITH $gavList as gavIds
-           |MATCH p = (topLevel)-[*1..]->(dependency)
+           |MATCH p = (topLevel:GAV)-[:D_DEPENDS_ON*1..]->(dependency:GAV)
            |WHERE topLevel.id in gavIds AND dependency.id in gavIds AND
-           |ANY (gavId in gavIds WHERE (topLevel:GAV)-[:DEPENDS_ON*1..]->(dependency:GAV{id:gavId}))
+           |ANY (gavId in gavIds WHERE (topLevel:GAV)-[:D_DEPENDS_ON*1..]->(dependency:GAV{id:gavId}))
            |RETURN DISTINCT dependency.id AS dependencyId""".stripMargin
       }
       case 1 => {

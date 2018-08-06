@@ -14,7 +14,13 @@ object Reporter {
   def writeReport(spark: SparkSession, sessionsWithDependencies: DataFrame, reportDir: String): Unit = {
     import spark.implicits._
 
-    val getTopLevel = udf((gavs: Seq[String], dependencies: Seq[String]) => gavs.diff(dependencies))
+    val getTopLevel = udf((gavs: Seq[String], dependencies: Seq[String]) => {
+      if (dependencies == null) {
+        gavs
+      } else {
+        gavs.diff(dependencies)
+      }
+    })
 
     logger.info("calculating direct and indirect usage")
 
